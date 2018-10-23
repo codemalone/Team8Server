@@ -1,12 +1,15 @@
+// imports
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+// routers
 var indexRouter = require('./routes/index');
 var helloRouter = require('./routes/hello');
 
+// instantiate the express application
 var app = express();
 
 // view engine setup
@@ -19,6 +22,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// map routes to each router
 app.use('/', indexRouter);
 app.use('/hello', helloRouter);
 
