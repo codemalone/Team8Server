@@ -1,4 +1,4 @@
-# Team 8 Server Node.js Code
+# Team 8: Node.js Server Code
 TCSS 450 Autumn 2018  
   
 Evan Lindsay <evandl@uw.edu>  
