@@ -1,16 +1,25 @@
 {
-  "name": "test",
+  "name": "tcss450a18-team8",
   "version": "0.0.0",
-  "private": true,
+  "main": "./bin/www",
   "scripts": {
     "start": "node ./bin/www"
   },
+  "engines": {
+    "node": "^8.12.0"
+  },
   "dependencies": {
-    "cookie-parser": "~1.4.3",
+    "body-parser": "^1.18.2",
     "debug": "~2.6.9",
     "express": "~4.16.0",
+    "form-data": "^2.3.2",
     "http-errors": "~1.6.2",
     "jade": "~1.11.0",
-    "morgan": "~1.9.0"
+    "morgan": "~1.9.0",
+    "mysql": "^2.15.0",
+    "npm": "^5.7.1",
+    "pg": "^7.4.1",
+    "pg-promise": "^8.1.1",
+    "request": "^2.88.0"
   }
 }
