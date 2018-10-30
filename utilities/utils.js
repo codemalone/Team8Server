@@ -7,11 +7,13 @@ const nodemailer = require('nodemailer');
 //We use this create the SHA256 hash
 const crypto = require("crypto");
 
-/*
- * Function to send an email to an email address.
- * 
+/** 
+ * Function to send an email address to the specified address.
+ * @param {string} recipient a valid email address
+ * @param {string} subj the subject line
+ * @param {string} message body in html or text format 
 */
-function sendEmail(receiver, subj, message) {
+function sendEmail(recipient, subj, message) {
 
     let transport = nodemailer.createTransport({
         host: 'smtp.gmail.com',
@@ -25,9 +27,9 @@ function sendEmail(receiver, subj, message) {
             
     let mailOptions = {
         from: '"8 Way Connections" <noreply.84920b3@gmail.com>', 
-        to: receiver, 
-        subject: subj, // Subject line
-        html: message // html body
+        to: recipient, 
+        subject: subj, 
+        html: message 
     };
 
     transport.sendMail(mailOptions, (error, info) => {

@@ -24,7 +24,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', require('./routes/index.js'));
 app.use('/register', require('./routes/register.js'));
 app.use('/login', require('./routes/login.js'));
-app.use('/mailtest', require('./routes/mailtest.js'));
 
 // Error handlers
 // catch 404 and forward to error handler
