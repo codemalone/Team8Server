@@ -22,13 +22,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Map endpoints to a router
 app.use('/', require('./routes/index.js'));
-app.use('/hello', require('./routes/hello.js'));
-app.use('/params', require('./routes/params.js'));
-app.use('/wait', require('./routes/wait.js'));
-app.use('/demosql', require('./routes/demosql.js'));
 app.use('/register', require('./routes/register.js'));
 app.use('/login', require('./routes/login.js'));
-app.use('/phish', require('./routes/phish.js'));
 
 // Error handlers
 // catch 404 and forward to error handler
