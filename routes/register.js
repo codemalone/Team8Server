@@ -34,21 +34,37 @@ router.post('/', (req, res) => {
         //If you're interested as to what that is, and why we should use it
         //watch this youtube video: https://www.youtube.com/watch?v=8ZtInClXe1Q
         let salt = crypto.randomBytes(32).toString("hex");
-        let salted_hash = getHash(password, salt);
+        let saltedHash = getHash(password, salt);
+        let vCode = crypto.randomBytes(8).toString("hex");
+        let vCodeHash = getHash(vCode, salt);
 
         //Use .none() since no result gets returned from an INSERT in SQL
         //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
         //If you want to read more:https://stackoverflow.com/a/8265319
-        let params = [first, last, username, email, salted_hash, salt];
-        db.none("INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt)"
-                + "VALUES ($1, $2, $3, $4, $5, $6)", params)
-        .then(() => {
-            //We successfully added the user, let the user know
+        let params = [first, last, username, email, saltedHash, salt];
+        
+        db.task(t => {
+            return t.one("INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt)"
+                    + "VALUES ($1, $2, $3, $4, $5, $6) RETURNING memberid", params)
+                .then(data => {
+                    return t.none("INSERT INTO REGISTRATIONHASHES(hash, memberid)" 
+                        + "VALUES ($1, $2)", [vCodeHash, data.memberid]);
+                });
+        }).then(() => {
+            // added user and verification code to db so send email
+            // sendEmail(email, "Welcome!", "<strong>Welcome to our app!</strong>");
+            //console.log("Sending email verification to " + email);
+
+            let link = "http://tcss450a18-team8-test.herokuapp.com/verify?email=" + email + "&code=" + vCode;
+
+            let msg = "Welcome to our app! Please verify this email address by clicking the link below.<p>"
+                        + "<a href=\"" + link + "\">" + link + "</a>";
+
+            sendEmail(email, "Verify your account", msg);
             res.send({
                 success: true
-            });
+            })
 
-            sendEmail(email, "Welcome!", "<strong>Welcome to our app!</strong>");
         }).catch((err) => {
             //log the error
             console.log(err);
