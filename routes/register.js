@@ -57,8 +57,7 @@ router.post('/', (req, res) => {
             let msg = "Welcome to our app! Please verify this email address by clicking the link below.<p>"
                         + "<a href=\"" + link + "\">" + link + "</a>";
 
-            //sendEmail(email, "Verify your account", msg);
-            console.dir({email: email, vCode: vCode})
+            sendEmail(email, "Verify your account", msg);
             res.send({
                 success: true
             })
