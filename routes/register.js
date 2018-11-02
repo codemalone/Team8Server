@@ -42,14 +42,11 @@ router.post('/', (req, res) => {
         //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
         //If you want to read more:https://stackoverflow.com/a/8265319
         let params = [first, last, username, email, saltedHash, salt];
-        
-        db.task(t => {
-            return t.one("INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt)"
-                    + "VALUES ($1, $2, $3, $4, $5, $6) RETURNING memberid", params)
-                .then(data => {
-                    return t.none("INSERT INTO REGISTRATIONHASHES(hash, memberid)" 
-                        + "VALUES ($1, $2)", [vCodeHash, data.memberid]);
-                });
+        db.one("INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt)"
+                + "VALUES ($1, $2, $3, $4, $5, $6) RETURNING memberid", params)
+        .then(data => {
+            return db.none("INSERT INTO REGISTRATIONHASHES(hash, memberid) VALUES ($1, $2)",
+                [vCodeHash, data.memberid]);
         }).then(() => {
             // added user and verification code to db so send email
             // sendEmail(email, "Welcome!", "<strong>Welcome to our app!</strong>");
@@ -64,7 +61,6 @@ router.post('/', (req, res) => {
             res.send({
                 success: true
             })
-
         }).catch((err) => {
             //log the error
             console.log(err);
