@@ -1,17 +1,43 @@
 //Get the connection to Heroku Database
 let db = require('./sql_conn.js');
 
+//Get the connection to Mailer service
+const nodemailer = require('nodemailer');
+
 //We use this create the SHA256 hash
 const crypto = require("crypto");
-function sendEmail(from, receiver, subj, message) {
-    //research nodemailer for sending email from node.
-    //https://nodemailer.com/about/
-    // https://www.w3schools.com/nodejs/nodejs_email.asp
-    //create a burner gmail account 
-    //make sure you add the password to the environmental variables
-    //similarto the DATABASE_URL and PHISH_DOT_NET_KEY (later section of the lab)
-    //fake sending an email for now. Post a message to logs. 
-    console.log('Email sent: ' + message);
+
+/** 
+ * Function to send an email address to the specified address.
+ * @param {string} recipient a valid email address
+ * @param {string} subj the subject line
+ * @param {string} message body in html or text format 
+*/
+function sendEmail(recipient, subj, message) {
+
+    let transport = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+            user: 'noreply.84920b3', 
+            pass: process.env.MAILER_PASSWORD 
+        }
+    });
+            
+    let mailOptions = {
+        from: '"8 Way Connections" <noreply.84920b3@gmail.com>', 
+        to: recipient, 
+        subject: subj, 
+        html: message 
+    };
+
+    transport.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return console.log(error);
+        }
+        console.log('Message sent: %s', info.messageId);
+    });
 }
 
 /**
