@@ -15,11 +15,10 @@ router.use(bodyParser.json());
 router.post('/', (req, res) => {
     let email = req.body['email'];
     let theirPw = req.body['password'];
-    let wasSuccessful = false;
-
+    
     if(email && theirPw) {
         //Using the 'one' method means that only one row should be returned
-        db.one('SELECT Password, Salt FROM Members WHERE Email=$1', [email])
+        db.one('SELECT Password, Salt, Verification FROM Members WHERE Email=$1', [email])
         //If successful, run function passed into .then()
         .then(row => {
             let salt = row['salt'];
@@ -30,11 +29,18 @@ router.post('/', (req, res) => {
             let theirSaltedHash = getHash(theirPw, salt); 
 
             //Did our salted hash match their salted hash?
-            let wasCorrectPw = ourSaltedHash === theirSaltedHash; 
+            if (ourSaltedHash != theirSaltedHash) {
+                throw('invalid credentials');
+            }
+            
+            //Is the account verified
+            if (row.verification == 0) {
+                throw('not verified');
+            }
 
-            //Send whether they had the correct password or not
+            //After error checking send success message
             res.send({
-                success: wasCorrectPw 
+                success: true
             });
         })
         //More than one row shouldn't be found, since table has constraint on it
