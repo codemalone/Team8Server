@@ -11,8 +11,8 @@ router.post('/', (req, res) => {
     //let latitude = req.body['latitude'];
     //let longitude = req.body['longititude'];
     let zipcode = 255;
-    let latitude = 38.123;
-    let longitude = -78.543;
+    let latitude = 47.3223;
+    let longitude = 122.3126;
     let timestamp = "" + d.getFullYear() + "/" + d.getMonth() + "/" + d.getDate() + "/" + d.getHours();
     db.one("SELECT * FROM WEATHER WHERE zip = $1", zipcode)
         .then(row => {
@@ -43,7 +43,7 @@ router.post('/', (req, res) => {
 function weathercall(lat, long, time, zip, res) {
     //let url = `https://api.weatherbit.io/v2.0/forecast/daily?city=Raleigh,NC&key=${API_KEY}&days=1`;
     //let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${long}&key=${API_KEY}&days=1`;
-    let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=38.123&lon=-78.543&key=${API_KEY}&days=1`;
+    let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=47.3223&lon=122.3126&key=${API_KEY}&days=1`;
     let dailyweather = {};
     request(url, function (error, response, body) {
         if (error) {
@@ -57,7 +57,7 @@ function weathercall(lat, long, time, zip, res) {
     });
     //url = `https://api.weatherbit.io/v2.0/forecast/hourly?city=Raleigh,NC&key=${API_KEY}&hours=3`;
     //url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=${lat}&lon=${long}&key=${API_KEY}&hours=3`;
-    url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=38.123&lon=-78.543&key=${API_KEY}&hours=3`;
+    url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=47.3223&lon=122.3126&key=${API_KEY}&hours=3`;
     request(url, function (error, response, body) {
         if (error) {
             res.send(error);
