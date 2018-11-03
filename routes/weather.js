@@ -40,7 +40,7 @@ router.post('/', (req, res) => {
                 });
             }
         }).catch((err) => {
-            console.log(err);
+            console.log("ADDING");
             // (zip doesn't exist) = make weather call
             weathercall(latitude, longitude, timestamp, zipcode, res);
         })
