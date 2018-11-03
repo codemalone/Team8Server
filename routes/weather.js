@@ -16,13 +16,13 @@ router.post('/', (req, res) => {
         let parsed = row['timestamp'].split("/");
         if (parsed[0] != d.getFullYear() || parsed[1] != d.getMonth() || parsed[2] != d.getDate() || parsed[3] != d.getHours()) {
             db.none("DELETE FROM WEATHER WHERE zip = $1", zipcode);
+            weathercall(latitude, longitude, timestamp, zipcode, res);
             res.send({
-                weathercall(latitude, longitude, timestamp, zipcode, res)
+                zipcodeFound: changed
             })
-            //weathercall(latitude, longitude, timestamp, zipcode, res);
         }
         res.send({
-            zipcodeFound: noChange
+            zipcodeFound: notChanged
         })
     }).catch(() => {
         // (zip doesn't exist) = make weather call
