@@ -54,8 +54,13 @@ router.post('/', (req, res) => {
             //Therefore, let the requester know they tried to create an account that already exists
             res.send({
                 success: false,
-                error: err
+                error: "registration failed"
             });
+            console.dir({
+                success: false,
+                action: "registration",
+                err: err
+                })
         });
     } else {
         res.send({

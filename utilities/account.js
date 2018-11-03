@@ -2,7 +2,7 @@
 let db = require('./utils.js').db;
 
 //Get the connection to Mailer service
-const mailer = require('./utils.js').sendEmail;
+const sendEmail = require('./utils.js').sendEmail;
 
 //Get the hasher
 const getHash = require('./utils.js').getHash;

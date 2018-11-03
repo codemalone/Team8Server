@@ -32,8 +32,9 @@ router.post('/', (req, res) => {
             //If anything happened, it wasn't successful
             res.send({
                 success: false,
-                message: err
+                message: "login failed"
             });
+            console.dir('login failed: ' + email);
         });
     } else {
         res.send({
