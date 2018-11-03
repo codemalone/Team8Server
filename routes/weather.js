@@ -27,7 +27,7 @@ router.post('/', (req, res) => {
                 } else {
                     let hourlyweather = body;
                     //let zipJSON = { 'zip': zipcode }
-                    body = [dailyweather, hourlyweather, {'zip': zipcode}];
+                    body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), {'zip': zipcode}];
                     res.send(body);
                 }
             });
