@@ -13,7 +13,7 @@ router.post('/', (req, res) => {
     let zipcode = 255;
     let latitude = 47.3223;
     let longitude = -122.3126;
-    let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=` + lat + `&lon=` + long + `&key=${API_KEY}&days=1`;
+    let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&days=1`;
     let dailyweather = {};
     request(url, function (error, response, body) {
         if (error) {
@@ -22,14 +22,14 @@ router.post('/', (req, res) => {
             dailyweather = body;
         }
     });
-    url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=` + lat + `&lon=` + long + `&key=${API_KEY}&hours=3`;
+    url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&hours=3`;
     request(url, function (error, response, body) {
         if (error) {
             res.send(error);
         } else {
             let hourlyweather = body;
-            let zipJSON = { 'zip': zip }
-            body = [dailyweather, hourlyweather, zipJSON];
+            //let zipJSON = { 'zip': zipcode }
+            body = [dailyweather, hourlyweather, {'zip': zipcode}];
             res.send(body);
         }
     });
