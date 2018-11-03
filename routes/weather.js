@@ -39,7 +39,8 @@ function weathercall(lat, long, time, zip, res) {
         if (error) {
             res.send(error);
         } else {
-            dailyweather = body;
+            //dailyweather = body;
+            dailyweather = { 'test':'testernion'};
             JSON.stringify(dailyweather);
             //res.write(body);
         }
@@ -51,6 +52,7 @@ function weathercall(lat, long, time, zip, res) {
         } else {
             // res.send(response);
             let hourlyweather = body;
+            hourlyweather = { 'test':'testernion'};
             JSON.stringify(hourlyweather);
             let params = [zip, time, hourlyweather, dailyweather];
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params);
