@@ -21,9 +21,10 @@ router.post('/', (req, res) => {
                 console.log("DELETED + ADDING");
                 weathercall(latitude, longitude, timestamp, zipcode, res);
             } else {
-                res.send({
-                    unchanged: true
-                })
+                db.one("SELECT hourlyweather, dailyweather FROM WEATHER WHERE zip = $1", zip)
+                .then(row => {
+                    res.send(row['dailyweather'].concat(row['hourlyweather']));
+                });
             }
         }).catch((err) => {
             console.log(err);
