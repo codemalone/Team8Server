@@ -20,19 +20,30 @@ router.post('/', (req, res) => {
             res.send(error);
         } else {
             dailyweather = body;
+            url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&hours=3`;
+            request(url, function (error, response, body) {
+                if (error) {
+                    res.send(error);
+                } else {
+                    let hourlyweather = body;
+                    //let zipJSON = { 'zip': zipcode }
+                    body = [dailyweather, hourlyweather, {'zip': zipcode}];
+                    res.send(body);
+                }
+            });
         }
     });
-    url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&hours=3`;
-    request(url, function (error, response, body) {
-        if (error) {
-            res.send(error);
-        } else {
-            let hourlyweather = body;
-            //let zipJSON = { 'zip': zipcode }
-            body = [dailyweather, hourlyweather, {'zip': zipcode}];
-            res.send(body);
-        }
-    });
+    // url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&hours=3`;
+    // request(url, function (error, response, body) {
+    //     if (error) {
+    //         res.send(error);
+    //     } else {
+    //         let hourlyweather = body;
+    //         //let zipJSON = { 'zip': zipcode }
+    //         body = [dailyweather, hourlyweather, {'zip': zipcode}];
+    //         res.send(body);
+    //     }
+    // });
 });
 
 module.exports = router;
