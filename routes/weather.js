@@ -66,7 +66,7 @@ function weathercall(lat, long, time, zip, res) {
                 //body = Object.assign(dailyweather, hourlyweather);
                 //dailyweather = dailyweather.concat(hourlyweather);
                 //body = dailyweather;
-                body = [dailyweather, hourlyweather];
+                body = [JSON.parse(dailyweather), JSON.parse(hourlyweather)];
                 //res.send(dailyweather.concat(hourlyweather));
                 res.send(body);
             });
