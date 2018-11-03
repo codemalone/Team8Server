@@ -5,7 +5,7 @@ let db = require('../utilities/utils').db;
 var router = express.Router();
 var d = new Date();
 router.post('/', (req, res) => {
-    let zipcode = 11;
+    let zipcode = 1258125;
     let latitude = 38.123;
     let longitude = 78.543;
     let timestamp = "" + d.getFullYear() + "/" + d.getMonth() + "/" + d.getDate() + "/" + d.getHours();
@@ -54,8 +54,9 @@ function weathercall(lat, long, time, zip, res) {
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params);
             db.one("SELECT hourlyweather, dailyweather FROM WEATHER WHERE zip = $1", zip)
             .then(row => {
-                body = dailyweather;
-                res.send(body);
+                dailyweather = dailyweather.concat(hourlyweather);
+                //body = dailyweather;
+                res.send(dailyweather);
             });
         }
     });
