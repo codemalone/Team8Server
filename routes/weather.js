@@ -7,10 +7,10 @@ var router = express.Router();
 var d = new Date();
 router.use(bodyParser.json());
 router.post('/', (req, res) => {
-    //let zipcode = req.body['zipcode'];
+    let zipcode = req.body['zipcode'];
     //let latitude = req.body['latitude'];
     //let longitude = req.body['longititude'];
-    let zipcode = 255;
+    //let zipcode = 255;
     let latitude = 47.3223;
     let longitude = -122.3126;
     let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&days=1`;
