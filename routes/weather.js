@@ -4,10 +4,11 @@ const API_KEY = process.env.WEATHERBIT_API_KEY;
 let db = require('../utilities/utils').db;
 var router = express.Router();
 var d = new Date();
+router.use(bodyParser.json());
 router.post('/', (req, res) => {
-    let zipcode = 333;
-    let latitude = 38.123;
-    let longitude = 78.543;
+    let zipcode = req.body['zipcode'];
+    let latitude = req.body['latitude'];
+    let longitude = req.body['longititude'];
     let timestamp = "" + d.getFullYear() + "/" + d.getMonth() + "/" + d.getDate() + "/" + d.getHours();
     db.one("SELECT * FROM WEATHER WHERE zip = $1", zipcode)
         .then(row => {
