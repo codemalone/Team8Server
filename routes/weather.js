@@ -24,9 +24,9 @@ router.post('/', (req, res) => {
                 console.log("DELETED + ADDING");
                 weathercall(latitude, longitude, timestamp, zipcode, res);
             } else {
-                db.one("SELECT hourlyweather, dailyweather FROM WEATHER WHERE zip = $1", zipcode)
+                db.one("SELECT hourlyweather, dailyweather, zip FROM WEATHER WHERE zip = $1", zipcode)
                 .then(row => {
-                    let body = [row['dailyweather'], row['hourlyweather']];
+                    let body = [row['dailyweather'], row['hourlyweather'], row['zip']];
                     //let temp = JSON.stringify(row['dailyweather']);
                     //temp.concat(JSON.stringify(row['hourlyweather']));
                     res.send(body);
@@ -62,12 +62,12 @@ function weathercall(lat, long, time, zip, res) {
             JSON.stringify(hourlyweather);
             let params = [zip, time, hourlyweather, dailyweather];
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params);
-            db.one("SELECT hourlyweather, dailyweather FROM WEATHER WHERE zip = $1", zip)
+            db.one("SELECT hourlyweather, dailyweather, zip FROM WEATHER WHERE zip = $1", zip)
             .then(row => {
                 //body = Object.assign(dailyweather, hourlyweather);
                 //dailyweather = dailyweather.concat(hourlyweather);
                 //body = dailyweather;
-                body = [JSON.parse(dailyweather), JSON.parse(hourlyweather)];
+                body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), row['zip']];
                 //res.send(dailyweather.concat(hourlyweather));
                 res.send(body);
             });
