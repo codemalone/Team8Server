@@ -5,7 +5,7 @@ let db = require('../utilities/utils').db;
 var router = express.Router();
 var d = new Date();
 router.post('/', (req, res) => {
-    let zipcode = 2;
+    let zipcode = 32;
     let latitude = 38.123;
     let longitude = 78.543;
     let timestamp = "" + d.getFullYear() + "/" + d.getMonth() + "/" + d.getDate() + "/" + d.getHours();
@@ -38,7 +38,7 @@ function weathercall(lat, long, time, zip, res) {
             res.send(error);
         } else {
             dailyweather = { "test2": "hello2" };
-            res.send(body);
+            res.write(body);
         }
     });
     url = `https://api.weatherbit.io/v2.0/forecast/hourly?city=Raleigh,NC&key=${API_KEY}&hours=24`;
