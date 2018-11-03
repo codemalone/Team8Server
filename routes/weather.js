@@ -76,6 +76,10 @@ function weathercall(lat, long, time, zip, res) {
                 body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), zipJSON];
                 //res.send(dailyweather.concat(hourlyweather));
                 res.send(body);
+            }).catch((err) => {
+                console.log(err);
+                // (zip doesn't exist) = make weather call
+                //weathercall(latitude, longitude, timestamp, zipcode, res);
             });
         }
     });
