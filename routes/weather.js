@@ -26,7 +26,8 @@ router.post('/', (req, res) => {
             } else {
                 db.one("SELECT hourlyweather, dailyweather, zip FROM WEATHER WHERE zip = $1", zipcode)
                 .then(row => {
-                    let body = [row['dailyweather'], row['hourlyweather'], JSON.parse("zip\":\"" + row['zip'])];
+                    let zipJSON = { 'zip':row['zip']}
+                    let body = [row['dailyweather'], row['hourlyweather'], zipJSON];
                     //let temp = JSON.stringify(row['dailyweather']);
                     //temp.concat(JSON.stringify(row['hourlyweather']));
                     res.send(body);
@@ -67,7 +68,8 @@ function weathercall(lat, long, time, zip, res) {
                 //body = Object.assign(dailyweather, hourlyweather);
                 //dailyweather = dailyweather.concat(hourlyweather);
                 //body = dailyweather;
-                body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), JSON.parse("zip\":\"" + row['zip'])];
+                let zipJSON = { 'zip':row['zip']}
+                body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), zipJSON];
                 //res.send(dailyweather.concat(hourlyweather));
                 res.send(body);
             });
