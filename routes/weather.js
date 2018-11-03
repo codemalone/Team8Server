@@ -23,7 +23,7 @@ router.post('/', (req, res) => {
             // })
         }
         res.send({
-            zipFound: notChanged
+            zipFound: true
         })
     }).catch((err) => {
         console.log(err);
