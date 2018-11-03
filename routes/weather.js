@@ -16,7 +16,7 @@ router.post('/', (req, res) => {
         let parsed = row['timestamp'].split("/");
         if (parsed[0] != d.getFullYear() || parsed[1] != d.getMonth() || parsed[2] != d.getDate() || parsed[3] != d.getHours()) {
             db.none("DELETE FROM WEATHER WHERE zip = $1", zipcode);
-            //weathercall(latitude, longitude, timestamp, zipcode);
+            //weathercall(latitude, longitude, timestamp, zipcode, res);
             res.send({
                 updating: true
             })
@@ -27,14 +27,14 @@ router.post('/', (req, res) => {
     }).catch((err) => {
         console.log(err);
         // (zip doesn't exist) = make weather call
-        weathercall(latitude, longitude, timestamp, zipcode);
+        weathercall(latitude, longitude, timestamp, zipcode, res);
         res.send({
             newEntry: true
         });
     })
 });
 
-function weathercall(lat, long, time, zip) {
+function weathercall(lat, long, time, zip, res) {
     let url = `https://api.weatherbit.io/v2.0/forecast/hourly?city=Raleigh,NC&key=${API_KEY}&hours=48`;
     request(url, function (error, response, body) {
         if (error) {
