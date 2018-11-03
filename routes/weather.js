@@ -71,7 +71,8 @@ function weathercall(lat, long, time, zip, res) {
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params)
             .then(() => {
                 let zipJSON = { 'zip':zip}
-                body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), zipJSON];
+                //body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), zipJSON];
+                body = [dailyweather, hourlyweather, zipJSON];
                 res.send(body);
             }).catch((err) => {
                 console.log(err);
