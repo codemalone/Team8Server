@@ -1,5 +1,6 @@
 const express = require('express');
 const request = require('request');
+const bodyParser = require("body-parser");
 const API_KEY = process.env.WEATHERBIT_API_KEY;
 let db = require('../utilities/utils').db;
 var router = express.Router();
