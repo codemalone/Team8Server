@@ -30,7 +30,7 @@ router.post('/', (req, res) => {
         // (zip doesn't exist) = make weather call
         //weathercall(latitude, longitude, timestamp, zipcode, res);
         res.send({
-            weathercall(latitude, longitude, timestamp, zipcode, res)
+            weather: weathercall(latitude, longitude, timestamp, zipcode, res)
         });
     })
 });
