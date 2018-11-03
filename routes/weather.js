@@ -10,7 +10,7 @@ router.post('/', (req, res) => {
     //let zipcode = req.body['zipcode'];
     //let latitude = req.body['latitude'];
     //let longitude = req.body['longititude'];
-    let zipcode = 124;
+    let zipcode = 12222;
     let latitude = 125;
     let longitude = 125;
     let timestamp = "" + d.getFullYear() + "/" + d.getMonth() + "/" + d.getDate() + "/" + d.getHours();
@@ -66,7 +66,9 @@ function weathercall(lat, long, time, zip, res) {
                 //body = Object.assign(dailyweather, hourlyweather);
                 //dailyweather = dailyweather.concat(hourlyweather);
                 //body = dailyweather;
-                res.send(dailyweather.concat(hourlyweather));
+                body = [dailyweather, hourlyweather];
+                //res.send(dailyweather.concat(hourlyweather));
+                res.send(body);
             });
         }
     });
