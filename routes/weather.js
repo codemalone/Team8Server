@@ -87,7 +87,7 @@ function weathercall(lat, long, time, zip, res) {
                 //res.send(dailyweather.concat(hourlyweather));
                 res.send(body);
             }).catch((err) => {
-                console.log("4");
+                console.log(err);
             });
         }
     });
