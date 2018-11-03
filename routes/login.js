@@ -21,7 +21,7 @@ router.post('/', (req, res) => {
         .then(user => {
             //Is the account verified
             if (user.verification == 0) {
-                throw('not verified');
+                throw({message: 'not verified'});
             } else {
                 res.send({
                     success: true
@@ -32,7 +32,7 @@ router.post('/', (req, res) => {
             //If anything happened, it wasn't successful
             res.send({
                 success: false,
-                message: "login failed"
+                message: err.message
             });
             console.dir('login failed: ' + email);
         });
