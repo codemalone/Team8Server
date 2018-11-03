@@ -74,7 +74,7 @@ function weathercall(lat, long, time, zip, res) {
                 body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), zipJSON];
                 res.send(body);
             }).catch((err) => {
-                console.log("3");
+                console.log(err);
             });
             // db.one("SELECT hourlyweather, dailyweather, zip FROM WEATHER WHERE zip = $1", zip)
             // .then(row => {
