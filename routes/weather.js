@@ -54,10 +54,10 @@ function weathercall(lat, long, time, zip, res) {
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params);
             db.one("SELECT hourlyweather, dailyweather FROM WEATHER WHERE zip = $1", zip)
             .then(row => {
-                body = Object.assign(dailyweather, hourlyweather);
+                //body = Object.assign(dailyweather, hourlyweather);
                 //dailyweather = dailyweather.concat(hourlyweather);
                 //body = dailyweather;
-                res.send(body);
+                res.send(dailyweather.concat(hourlyweather));
             });
         }
     });
