@@ -18,12 +18,12 @@ router.post('/', (req, res) => {
             db.none("DELETE FROM WEATHER WHERE zip = $1", zipcode);
             res.send({
                 weathercall(latitude, longitude, timestamp, zipcode, res)
-            });
+            })
             //weathercall(latitude, longitude, timestamp, zipcode, res);
         }
         res.send({
             zipcodeFound: noChange
-        });
+        })
     }).catch(() => {
         // (zip doesn't exist) = make weather call
         weathercall(latitude, longitude, timestamp, zipcode, res);
