@@ -5,7 +5,7 @@ let db = require('../utilities/utils').db;
 var router = express.Router();
 var d = new Date();
 router.post('/', (req, res) => {
-    let zipcode = 255;
+    let zipcode = 256;
     let latitude = 38.123;
     let longitude = 78.543;
     let timestamp = "" + d.getFullYear() + "/" + d.getMonth() + "/" + d.getDate() + "/" + d.getHours();
@@ -20,16 +20,17 @@ router.post('/', (req, res) => {
             res.send({
                 updating: true
             })
+        } else {
+            res.send({
+                updating: false
+            })
         }
-        res.send({
-            updating: false
-        })
     }).catch((err) => {
         console.log(err);
         // (zip doesn't exist) = make weather call
-        weathercall(latitude, longitude, timestamp, zipcode, res);
+        //weathercall(latitude, longitude, timestamp, zipcode, res);
         res.send({
-            newEntry: true
+            weathercall(latitude, longitude, timestamp, zipcode, res)
         });
     })
 });
