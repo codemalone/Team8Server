@@ -37,7 +37,7 @@ router.post('/', (req, res) => {
 
 function weathercall(lat, long, time, zip, res) {
     let url = `https://api.weatherbit.io/v2.0/forecast/daily?city=Raleigh,NC&key=${API_KEY}&days=10`;
-    let dailyweather = { "test1": "hello1" };
+    let dailyweather;
     request(url, function (error, response, body) {
         if (error) {
             res.send(error);
