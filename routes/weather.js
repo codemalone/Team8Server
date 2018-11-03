@@ -23,7 +23,7 @@ router.post('/', (req, res) => {
                 db.none("DELETE FROM WEATHER WHERE zip = $1", zipcode)
                 .then(() => {
                 }).catch((err) => {
-                    console.log(err);
+                    console.log("1");
                 });
                 console.log("DELETED + ADDING");
                 weathercall(latitude, longitude, timestamp, zipcode, res);
@@ -36,7 +36,7 @@ router.post('/', (req, res) => {
                     //temp.concat(JSON.stringify(row['hourlyweather']));
                     res.send(body);
                 }).catch((err) => {
-                    console.log(err);
+                    console.log("2");
                 });
             }
         }).catch((err) => {
@@ -75,7 +75,7 @@ function weathercall(lat, long, time, zip, res) {
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params)
             .then(() => {
             }).catch((err) => {
-                console.log(err);
+                console.log("3");
             });
             db.one("SELECT hourlyweather, dailyweather, zip FROM WEATHER WHERE zip = $1", zip)
             .then(row => {
@@ -87,7 +87,7 @@ function weathercall(lat, long, time, zip, res) {
                 //res.send(dailyweather.concat(hourlyweather));
                 res.send(body);
             }).catch((err) => {
-                console.log(err);
+                console.log("4");
             });
         }
     });
