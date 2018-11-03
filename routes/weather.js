@@ -74,21 +74,23 @@ function weathercall(lat, long, time, zip, res) {
             let params = [zip, time, hourlyweather, dailyweather];
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params)
             .then(() => {
+                let zipJSON = { 'zip':zip}
+                body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), zipJSON];
             }).catch((err) => {
                 console.log("3");
             });
-            db.one("SELECT hourlyweather, dailyweather, zip FROM WEATHER WHERE zip = $1", zip)
-            .then(row => {
-                //body = Object.assign(dailyweather, hourlyweather);
-                //dailyweather = dailyweather.concat(hourlyweather);
-                //body = dailyweather;
-                let zipJSON = { 'zip':row['zip']}
-                body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), zipJSON];
-                //res.send(dailyweather.concat(hourlyweather));
-                res.send(body);
-            }).catch((err) => {
-                console.log(err);
-            });
+            // db.one("SELECT hourlyweather, dailyweather, zip FROM WEATHER WHERE zip = $1", zip)
+            // .then(row => {
+            //     //body = Object.assign(dailyweather, hourlyweather);
+            //     //dailyweather = dailyweather.concat(hourlyweather);
+            //     //body = dailyweather;
+            //     let zipJSON = { 'zip':row['zip']}
+            //     body = [JSON.parse(dailyweather), JSON.parse(hourlyweather), zipJSON];
+            //     //res.send(dailyweather.concat(hourlyweather));
+            //     res.send(body);
+            // }).catch((err) => {
+            //     console.log(err);
+            // });
         }
     });
 }
