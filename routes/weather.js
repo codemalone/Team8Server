@@ -20,7 +20,11 @@ router.post('/', (req, res) => {
             // IF at least an hour difference = delete row + make weather call
             let parsed = row['timestamp'].split("/");
             if (parsed[0] != d.getFullYear() || parsed[1] != d.getMonth() || parsed[2] != d.getDate() || parsed[3] != (d.getHours())) {
-                db.none("DELETE FROM WEATHER WHERE zip = $1", zipcode);
+                db.none("DELETE FROM WEATHER WHERE zip = $1", zipcode)
+                .then(() => {
+                }).catch((err) => {
+                    console.log(err);
+                });
                 console.log("DELETED + ADDING");
                 weathercall(latitude, longitude, timestamp, zipcode, res);
             } else {
@@ -31,6 +35,8 @@ router.post('/', (req, res) => {
                     //let temp = JSON.stringify(row['dailyweather']);
                     //temp.concat(JSON.stringify(row['hourlyweather']));
                     res.send(body);
+                }).catch((err) => {
+                    console.log(err);
                 });
             }
         }).catch((err) => {
@@ -66,7 +72,11 @@ function weathercall(lat, long, time, zip, res) {
             let hourlyweather = body;
             JSON.stringify(hourlyweather);
             let params = [zip, time, hourlyweather, dailyweather];
-            db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params);
+            db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params)
+            .then(() => {
+            }).catch((err) => {
+                console.log(err);
+            });
             db.one("SELECT hourlyweather, dailyweather, zip FROM WEATHER WHERE zip = $1", zip)
             .then(row => {
                 //body = Object.assign(dailyweather, hourlyweather);
@@ -78,8 +88,6 @@ function weathercall(lat, long, time, zip, res) {
                 res.send(body);
             }).catch((err) => {
                 console.log(err);
-                // (zip doesn't exist) = make weather call
-                //weathercall(latitude, longitude, timestamp, zipcode, res);
             });
         }
     });
