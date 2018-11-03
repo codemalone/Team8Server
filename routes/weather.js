@@ -5,7 +5,7 @@ let db = require('../utilities/utils').db;
 var router = express.Router();
 var d = new Date();
 router.post('/', (req, res) => {
-    let zipcode = 32;
+    let zipcode = 25;
     let latitude = 38.123;
     let longitude = 78.543;
     let timestamp = "" + d.getFullYear() + "/" + d.getMonth() + "/" + d.getDate() + "/" + d.getHours();
@@ -37,7 +37,7 @@ function weathercall(lat, long, time, zip, res) {
         if (error) {
             res.send(error);
         } else {
-            dailyweather = { "test2": "hello2" };
+            dailyweather = body;
             //res.write(body);
         }
     });
@@ -50,7 +50,11 @@ function weathercall(lat, long, time, zip, res) {
             let hourlyweather = body;
             let params = [zip, time, hourlyweather, dailyweather];
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params);
-            res.send(body);
+            db.one("SELECT hourlyweather, dailyweather FROM WEATHER WHERE zip = $1", zip)
+            .then(row => {
+                body = {dailyweather, hourlyweather};
+                res.send(body);
+            });
         }
     });
 }
