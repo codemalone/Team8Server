@@ -9,10 +9,10 @@ router.use(bodyParser.json());
 router.post('/', (req, res) => {
     let zipcode = req.body['zipcode'];
     let latitude = req.body['latitude'];
-    //let longitude = req.body['longititude'];
+    let longitude = req.body['longititude'];
     //let zipcode = 255;
     //let latitude = 47.3223;
-    let longitude = -122.3126;
+    //let longitude = -122.3126;
     let timestamp = "" + d.getFullYear() + "/" + d.getMonth() + "/" + d.getDate() + "/" + d.getHours();
     db.one("SELECT * FROM WEATHER WHERE zip = $1", zipcode)
         .then(row => {
