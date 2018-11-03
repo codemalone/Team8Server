@@ -38,7 +38,7 @@ function weathercall(lat, long, time, zip, res) {
             res.send(error);
         } else {
             dailyweather = { "test2": "hello2" };
-            res.write(body);
+            //res.write(body);
         }
     });
     url = `https://api.weatherbit.io/v2.0/forecast/hourly?city=Raleigh,NC&key=${API_KEY}&hours=24`;
