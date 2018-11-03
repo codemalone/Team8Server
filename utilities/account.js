@@ -71,7 +71,7 @@ function sendEmailValidationLink(email) {
                 [vCodeHash, user.memberid]);
     }).then(() => {
         // email a link to the user
-        let link = "http://tcss450a18-team8-test.herokuapp.com/verify?email=" + user.email + "&code=" + user.vCode;
+        let link = "http://tcss450a18-team8.herokuapp.com/verify?email=" + user.email + "&code=" + user.vCode;
         let msg = "Welcome to our app! Please verify this email address by clicking the link below.<p>"
                 + "<a href=\"" + link + "\">" + link + "</a>";
         
