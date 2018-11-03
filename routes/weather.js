@@ -39,8 +39,8 @@ function weathercall(lat, long, time, zip, res) {
         if (error) {
             res.send(error);
         } else {
-            //dailyweather = body;
-            dailyweather = { 'test':'testernion'};
+            dailyweather = body;
+            //dailyweather = { 'test':'testernion'};
             JSON.stringify(dailyweather);
             //res.write(body);
         }
@@ -59,7 +59,7 @@ function weathercall(lat, long, time, zip, res) {
             db.one("SELECT hourlyweather, dailyweather FROM WEATHER WHERE zip = $1", zip)
             .then(row => {
                 //body = Object.assign(dailyweather, hourlyweather);
-                //dailyweather = dailyweather.concat(hourlyweather);
+                dailyweather = dailyweather.concat(hourlyweather);
                 //body = dailyweather;
                 res.send(dailyweather.concat(hourlyweather));
             });
