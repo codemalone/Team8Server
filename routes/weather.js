@@ -46,7 +46,7 @@ function weathercall(lat, long, time, zip, res) {
             let dailyweather = { "test2": "hello2" };
             let params = [zip, time, hourlyweather, dailyweather];
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params);
-            response.send(body);
+            res.send(body);
         }
     });
 }
