@@ -7,9 +7,12 @@ var router = express.Router();
 var d = new Date();
 router.use(bodyParser.json());
 router.post('/', (req, res) => {
-    let zipcode = req.body['zipcode'];
-    let latitude = req.body['latitude'];
-    let longitude = req.body['longititude'];
+    //let zipcode = req.body['zipcode'];
+    //let latitude = req.body['latitude'];
+    //let longitude = req.body['longititude'];
+    let zipcode = 125;
+    let latitude = 125;
+    let longitude = 125;
     let timestamp = "" + d.getFullYear() + "/" + d.getMonth() + "/" + d.getDate() + "/" + d.getHours();
     db.one("SELECT * FROM WEATHER WHERE zip = $1", zipcode)
         .then(row => {
