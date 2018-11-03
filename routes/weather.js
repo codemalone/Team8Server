@@ -29,7 +29,7 @@ router.post('/', (req, res) => {
         console.log(err);
         // (zip doesn't exist) = make weather call
         //weathercall(latitude, longitude, timestamp, zipcode, res);
-        res.send(weathercall(latitude, longitude, timestamp, zipcode, res));
+        weathercall(latitude, longitude, timestamp, zipcode, res);
     })
 });
 
@@ -44,7 +44,7 @@ function weathercall(lat, long, time, zip, res) {
             let dailyweather = { "test2": "hello2" };
             let params = [zip, time, hourlyweather, dailyweather];
             db.none("INSERT INTO WEATHER(zip, timestamp, hourlyweather, dailyweather) VALUES ($1, $2, $3, $4)", params);
-            res.write(body);
+            res.send(body);
         }
     });
 }
