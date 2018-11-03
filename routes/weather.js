@@ -39,7 +39,7 @@ router.post('/', (req, res) => {
 });
 
 function weathercall(lat, long, time, zip, res) {
-    let url = `https://api.weatherbit.io/v2.0/forecast/daily?city=Raleigh,NC&key=${API_KEY}&days=10`;
+    let url = `https://api.weatherbit.io/v2.0/forecast/daily?city=Raleigh,NC&key=${API_KEY}&days=2`;
     let dailyweather;
     request(url, function (error, response, body) {
         if (error) {
@@ -51,7 +51,7 @@ function weathercall(lat, long, time, zip, res) {
             //res.write(body);
         }
     });
-    url = `https://api.weatherbit.io/v2.0/forecast/hourly?city=Raleigh,NC&key=${API_KEY}&hours=24`;
+    url = `https://api.weatherbit.io/v2.0/forecast/hourly?city=Raleigh,NC&key=${API_KEY}&hours=4`;
     request(url, function (error, response, body) {
         if (error) {
             res.send(error);
