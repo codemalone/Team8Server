@@ -21,9 +21,9 @@ router.post('/', (req, res) => {
             //     zipcodeFound: changed
             // })
         }
-        // res.send({
-        //     zipcodeFound: notChanged
-        // })
+        res.send({
+            zipcodeFound: notChanged
+        })
     }).catch(() => {
         // (zip doesn't exist) = make weather call
         weathercall(latitude, longitude, timestamp, zipcode, res);
