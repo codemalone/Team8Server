@@ -71,7 +71,7 @@ function sendEmailValidationLink(email) {
                 [vCodeHash, user.memberid]);
     }).then(() => {
         // email a link to the user
-        let link = "http://tcss450a18-team8.herokuapp.com/verify?email=" + user.email + "&code=" + user.vCode;
+        let link = "http://tcss450a18-team8.herokuapp.com/account/verify?email=" + user.email + "&code=" + user.vCode;
         let msg = "Welcome to our app! Please verify this email address by clicking the link below.<p>"
                 + "<a href=\"" + link + "\">" + link + "</a>";
         
@@ -93,6 +93,11 @@ function validateEmail(email, code) {
             throw("invalid credentials");
         } else {
             user = data;
+        }
+
+        // user has already been verified so we can display success
+        if (user.verification == 1) {
+            return true;
         }
 
         // if the hash values match then update user account
@@ -155,7 +160,9 @@ function _getUserNoPassword(email) {
  * @param {string} email 
  */
 function _getUserAndValidationCode(email) {
-    return db.one('SELECT * FROM Members NATURAL JOIN RegistrationHashes WHERE Email=$1', [email]);
+    return db.one('SELECT * FROM Members LEFT JOIN RegistrationHashes ON ' + 
+                    'Members.memberid = RegistrationHashes.memberid ' +
+                    'WHERE Email=$1', [email]);
 }
 
 /**
@@ -176,6 +183,6 @@ function _setUserPassword(email, newPassword) {
 }
 
 module.exports = {
-    getUser, sendEmailValidationLink, validateEmail, 
+    getUser, sendEmailValidationLink, validateEmail,
     changePassword, resetPassword
 }
