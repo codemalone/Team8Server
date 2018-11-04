@@ -1,12 +1,19 @@
 //express is the framework we're going to use to handle requests
 const express = require('express');
 
-//Create connection to Heroku Database
+// checks a provided validation code
 let validateEmail = require('../utilities/account').validateEmail;
+
+// sends a new validation email
+let sendEmailValidationLink = require('../utilities/account').sendEmailValidationLink;
 
 var router = express.Router();
 
-router.get('/', (req, res) => {
+const bodyParser = require("body-parser");
+//This allows parsing of the body of POST requests, that are encoded in JSON
+router.use(bodyParser.json());
+
+router.get('/verify', (req, res) => {
     let email = req.query.email;
     let code = req.query.code;
     let response = {title: "Account Verification"};
@@ -26,7 +33,22 @@ router.get('/', (req, res) => {
         response.message = "Invalid input.";
         res.render('index', response);
     }
-
 });
+
+router.post('/sendVerification'), (req, res) => {
+    let email = req.body.email;
+
+    if(email) {
+        sendEmailValidationLink(email)
+        .then(() => {
+            res.send({ success: true });
+        })
+        .catch(() => {
+            res.send({ success: false, message: 'error'});
+        })
+    } else {
+        res.send({ success: false });
+    }
+}
 
 module.exports = router;
