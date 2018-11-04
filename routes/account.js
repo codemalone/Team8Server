@@ -37,7 +37,7 @@ router.get('/verify', (req, res) => {
     }
 });
 
-router.post('/sendVerification'), (req, res) => {
+router.post('/sendVerification', (req, res) => {
     let email = req.body.email;
 
     if(email) {
@@ -51,6 +51,6 @@ router.post('/sendVerification'), (req, res) => {
     } else {
         res.send({ success: false });
     }
-}
+});
 
 module.exports = router;
