@@ -7,6 +7,8 @@ let validateEmail = require('../utilities/account').validateEmail;
 var router = express.Router();
 
 router.get('/', (req, res) => {
+    console.log(res.headers);
+
     let email = req.query.email;
     let code = req.query.code;
     let response = {title: "Account Verification"};
