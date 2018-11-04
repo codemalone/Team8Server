@@ -13,13 +13,13 @@ router.post('/', (req, res) => {
     //let zipcode = 255;
     //let latitude = 47.3223;
     //let longitude = -122.3126;
-    let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&days=1`;
+    let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&days=10`;
     request(url, function (error, response, body) {
         if (error) {
             res.send(error);
         } else {
             let dailyweather = body;
-            url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&hours=3`;
+            url = `https://api.weatherbit.io/v2.0/forecast/hourly?lat=` + latitude + `&lon=` + longitude + `&key=${API_KEY}&hours=24`;
             request(url, function (error, response, body) {
                 if (error) {
                     res.send(error);
