@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').load();
+}
+
 /**
  * This script configures the Express application. To manage API resources,
  * we only need to map an endpoint to a valid router.
