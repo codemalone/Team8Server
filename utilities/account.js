@@ -130,21 +130,54 @@ function changePassword(email, oldPassword, newPassword) {
  * emailed to the user with a message reminding them to change it again.
  * @param {*} email address of the user
  */
-function resetPassword(email) {
-    // lookup the user data and pass it to the next promise
-    return _getUserNoPassword(email)
-    .then(user => {
-        // check if the user email has been validated.
+function resetPassword(email, newPassword, code) {
+    let user; // lookup the user data and pass it to the next promise
 
-        // generate a new password 
-        
-        // set the new password
+    return _getUserAndResetCode(email)
+    .then(data => {
+        if (!data) {
+            throw("invalid credentials");
+        } else {
+            user = data;
+        }
 
-    }).then(data => {
-        // send the new password by email
-
-
+        if (user.code == code) {
+            return _setUserPassword(email, newPassword);
+        } else {
+            throw("codes do not match");
+        }
+    }).then(() => {
+        return _removeResetCode(user.memberid);
     });
+}
+
+function sendPasswordResetCode(email) {
+    let user; // store user data for the promise chain
+
+    return _getUserNoPassword(email)
+        .then(data => {
+            if (!data) {
+                throw("invalid credentials");
+            } else {
+                user = data;
+            }
+
+            // remove any existing validation codes
+            return _removeResetCode(user.memberid);
+        }).then(() => {
+            // generate and store a new code
+            let rCode = crypto.randomBytes(8).toString("hex");
+            user.rCode = rCode;
+
+            return db.none("INSERT INTO ResetCodes(Code, MemberID) VALUES ($1, $2)",
+                [rCode, user.memberid]);
+        }).then(() => {
+            // email a code to the user
+            let msg = "A password reset has been requested. Enter the code in the app when requested.<p>"
+                + user.rCode;
+
+            sendEmail(user.email, "Password Reset Code", msg);
+        });
 }
 
 /**
@@ -165,6 +198,12 @@ function _getUserAndValidationCode(email) {
                     'WHERE Email=$1', [email]);
 }
 
+function  _getUserAndResetCode(email) {
+    return db.one('SELECT * FROM Members LEFT JOIN ResetCodes ON ' +
+        'Members.MemberID = ResetCodes.MemberID ' +
+        'WHERE Email=$1', [email])
+}
+
 /**
  * Helper function to remove any existing registration hashes for the user.
  * @param {int} memberid
@@ -173,16 +212,23 @@ function _removeRegistrationCodes(memberid) {
     return db.none("DELETE FROM registrationhashes WHERE memberid=$1", [memberid]);
 }
 
+function _removeResetCode(memberid) {
+    return db.none("DELETE FROM ResetCodes WHERE MemberID = $1", [memberid])
+}
+
 /**
  * Helper function to set a new password for the specified user.
  * @param {string} email of a register user
  * @param {string} newPassword to set
  */
 function _setUserPassword(email, newPassword) {
-    // db function here
+    let salt = crypto.randomBytes(32).toString("hex");
+    let saltedHash = getHash(password, salt);
+
+    db.none("UPDATE Members SET Password = $1, Salt = $2 WHERE Email = $3", [saltedHash, salt, email])
 }
 
 module.exports = {
     getUser, sendEmailValidationLink, validateEmail,
-    changePassword, resetPassword
+    changePassword, resetPassword, sendPasswordResetCode
 }

@@ -6,6 +6,7 @@ let validateEmail = require('../utilities/account').validateEmail;
 
 // sends a new validation email
 let sendEmailValidationLink = require('../utilities/account').sendEmailValidationLink;
+let sendPasswordResetCode = require('../utilities/account').sendPasswordResetCode;
 
 var router = express.Router();
 
@@ -50,5 +51,28 @@ router.post('/sendVerification', (req, res) => {
         res.send({ success: false });
     }
 });
+
+router.get("/resetPassword", (req, res) => {
+    let email = req.query.email;
+
+    if (email) {
+        sendPasswordResetCode(email);
+        res.send({ success: true });
+    } else {
+        res.send({ success: false });
+    }
+})
+
+router.post("/resetPassword", (req, res) => {
+    let email = req.body.email;
+    let password = req.body.password;
+    let code = req.body.code;
+
+    if (email && password && code) {
+        //
+    } else {
+        res.send({ success: false });
+    }
+})
 
 module.exports = router;
