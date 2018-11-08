@@ -1,61 +1,95 @@
 //Get the connection to Heroku Database
 let db = require('./utils.js').db;
 
-//Get the connection to Mailer service
-const sendEmail = require('./utils.js').sendEmail;
-
 //Get the hasher
 const getHash = require('./utils.js').getHash;
 
 //We use this create the SHA256 hash
 const crypto = require("crypto");
 
+//Error codes returned on failure
+const error = require('./error.js');
+
+// Configuration
+const ACCOUNT_VERIFICATION_CODE_EXPIRATION = 1440; // 1440 minutes = 24 hours
+const ACCOUNT_RECOVERY_CODE_EXPIRATION = 30; // minutes
+
 /**
- * Verifies the correct credentials and returns a user object.
+ * Checks if the provided email and password are correct.
  * @param {string} email a registered user email
  * @param {string} theirPw the associated user password
- * @return {user} an object with all user profile data
- * @throws "invalid credentials"
+ * @return {user} an object with user profile data
+ * @throws {MISSING_PARAMETERS} null email or password
+ * @throws {INVALID_CREDENTIALS} email or password not valid
+ * @throws {USER_NOT_VERIFIED} email has not been verified
  */
 function loginUserOnEmail(email, theirPw) {
-    //get the user data
-    return _getUserOnEmailNoPassword(email)
-        .then(data => {
-            if (!(data && _isPassword(data, theirPw))) {
-                throw("invalid credentials")
-            } else if (data.verification == 0) {
-                throw("not verified")
-            } else {
-                return data;
-            }
-        });
+     if (email && theirPw) {
+        return _getUserOnEmailNoPassword(email)
+            .then(user => {
+                if (!(user && _isPassword(user, theirPw))) {
+                    _handleAccountError(error.INVALID_CREDENTIALS);
+                } else if (user.verification == 0) {
+                    _handleAccountError(error.USER_NOT_VERIFIED);
+                } else {
+                    return _stripUser(user);
+                }
+            });
+    } else {
+        return _handleMissingInputError();
+    }
 }
 
+/**
+ * Checks if the provided username and password are correct.
+ * @param {string} email a registered user email
+ * @param {string} theirPw the associated user password
+ * @return {user} an object with user profile data
+ * @throws {MISSING_PARAMETERS} null email or password
+ * @throws {INVALID_CREDENTIALS} email or password not valid
+ * @throws {USER_NOT_VERIFIED} email has not been verified
+ */
 function loginUserOnUsername(username, theirPw) {
-    return _getUserOnUsernameNoPassword(username)
-        .then(data => {
-            if (!(data && _isPassword(data, theirPw))) {
-                throw("invalid credentials")
-            } else if (data.verification == 0) {
-                throw("not verified")
-            } else {
-                return data;
-            }
-        });
+    //parameters must not be null
+    if (username && theirPw) {
+        return _getUserOnUsernameNoPassword(username)
+            .then(user => {
+                if (!(user && _isPassword(user, theirPw))) {
+                    _handleAccountError(error.INVALID_CREDENTIALS);
+                } else if (user.verification == 0) {
+                    _handleAccountError(error.USER_NOT_VERIFIED);
+                } else {
+                    return _stripUser(user);
+                }
+            });
+    } else {
+        return _handleMissingInputError();
+    }
 }
 
-function registerUser(email, username, first, last, password) {
-    let salt = crypto.randomBytes(32).toString("hex");
-    let saltedHash = getHash(password, salt);
-    
-    let params = [first, last, username, email, saltedHash, salt];
-    return db.none("INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt)"
-            + "VALUES ($1, $2, $3, $4, $5, $6)", params)
-        .then(() => {
-            // async call to send a new validation link
-            sendValidationEmail(email);
-            return true;
-        });
+/**
+ * Adds a new user to the database.
+ * @param {string} first 
+ * @param {string} last 
+ * @param {string} username 
+ * @param {string} email 
+ * @param {string} password 
+ * @throws {MISSING_PARAMETERS} if any parameters are null
+ */
+function registerUser(first, last, username, email, password) {
+    if (first && last && username && email && password) {
+        // salt provided password for security
+        let salt = crypto.randomBytes(32).toString("hex");
+        let saltedHash = getHash(password, salt);
+        
+        return _addUser(first, last, username, email, saltedHash, salt)
+            .then(() => {
+                sendValidationEmail(email); // async call
+                return Promise.resolve();
+            })
+    } else {
+        return _handleMissingInputError();
+    }
 }
 
 /**
@@ -65,40 +99,43 @@ function registerUser(email, username, first, last, password) {
  * @param {string} email address of a registered user.
  */
 function sendValidationEmail(email) {
-    let user; // store user data for the promise chain
+    // email is required
+    if (!email) {
+        return _handleMissingInputError();
+    }
     
-    return _getUserNoPassword(email)
-    .then(data => {
-        if (!data) {
-            throw("invalid credentials");
-        } else {
-            user = data;
-        }
-        
-        // check that a user has not already validated
-        if (user.verification == 1) {
-            throw("user email has been validated");
-        } 
+    // store user data for the promise chain
+    let storedUser; 
+    
+    return _getUserOnEmailNoPassword(email)
+        .then(user => {
+            if (!user) {
+                _handleAccountError(error.INVALID_EMAIL);
+            } else if (user.verification == 1) {
+                _handleAccountError(error.USER_IS_VERIFIED);
+            } 
 
-        // remove any existing validation codes
-        return _removeRegistrationCodes(user.memberid);    
-    }).then(() => {
-        // generate and store a new code
-        let vCode = crypto.randomBytes(8).toString("hex");
-        let vCodeHash = getHash(vCode, user.salt);
-        user.vCode = vCode;
+            storedUser = user;        
+            return _removeRegistrationCodes(storedUser.memberid);    
+        }).then(() => {
+            // generate and store a new code
+            let vCode = crypto.randomBytes(8).toString("hex");
+            let vCodeHash = getHash(vCode, storedUser.salt);
+            storedUser.vCode = vCode;
 
-        return db.none("INSERT INTO registrationhashes(hash, memberid) VALUES ($1, $2)",
-                [vCodeHash, user.memberid]);
-    }).then(() => {
-        // email a link to the user
-        let link = "http://tcss450a18-team8.herokuapp.com/account/verify?email=" + user.email + "&code=" + user.vCode;
-        let msg = "Welcome to our app! Please verify this email address by clicking the link below.<p>"
-                + "<a href=\"" + link + "\">" + link + "</a>";
-        
-        //sendEmail(user.email, "Verify your account", msg);
-        console.log("sent verification email: " + user.email);
-    });
+            return _addRegistrationCode(storedUser.memberid, vCodeHash);
+        }).then(() => {
+            // email a link to the user
+            let link = "http://tcss450a18-team8.herokuapp.com/account/verify?email=" 
+                        + storedUser.email + "&code=" + storedUser.vCode;
+            let msg = "Welcome to our app! Please verify this email address by clicking the link below.<p>"
+                    + "<a href=\"" + link + "\">" + link + "</a>";
+            
+            //sendEmail(user.email, "Verify your account", msg);
+            console.dir({ message: "sent verification", email: storedUser.email, code: storedUser.vCode });
+
+            return Promise.resolve();
+        });
 }
 
 /**
@@ -107,30 +144,29 @@ function sendValidationEmail(email) {
  * @param {*} code provided in the email for validation
  */
 function validateEmail(email, code) {
-    let user; // store user data for the promise chain
-    
+    if (!(email && code)) {
+        return _handleMissingInputError(error.MISSING_PARAMETERS);
+    }
+        
     return _getUserAndValidationCode(email)
-    .then(data => {
-        if (!data) {
-            throw("invalid credentials");
-        } else {
-            user = data;
-        }
+        .then(user => {
+            if (!user) {
+                _handleAccountError(error.INVALID_VERIFICATION_CODE);
+            } 
+            
+            // a user that has already been verified returns gracefully
+            if (user.verification == 1) {
+                return Promise.resolve();
+            }
 
-        // user has already been verified so we can display success
-        if (user.verification == 1) {
-            return true;
-        }
-
-        // if the hash values match then update user account
-        if (user.hash == getHash(code, user.salt)) {
-            return db.none("UPDATE Members SET verification=1 WHERE memberid=$1", [user.memberid]);    
-        } else {
-            throw("hash codes do not match");
-        }
-    }).then(() => {
-        return _removeRegistrationCodes(user.memberid);
-    })
+            // if the hash values match then update user account
+            if (user.hash == getHash(code, user.salt)) {
+                return _setUserIsVerified(user.memberid)
+                    .then(() => _removeRegistrationCodes(user.memberid));
+            } else {
+                _handleAccountError(error.INVALID_VERIFICATION_CODE);
+            }
+        });
 }
 
 /**
@@ -140,12 +176,14 @@ function validateEmail(email, code) {
  * @param {string} newPassword the new password to set
  */
 function changePassword(email, oldPassword, newPassword) {
+    if (!(email && oldPassword && newPassword)) {
+        return _handleMissingInputError(error.MISSING_PARAMETERS);
+    }   
+    
     return _getUserOnEmailNoPassword(email)
         .then(user => {
-            if (!user) {
-                throw("the email was not found")
-            } else if (_isPassword(user, oldPassword) == false) {
-                throw("invalid username or password");
+            if (!(user && _isPassword(user, oldPassword))) {
+                _handleAccountError(error.INVALID_CREDENTIALS);
             } else {
                 return _setUserPassword(email, newPassword);
             }
@@ -157,34 +195,38 @@ function changePassword(email, oldPassword, newPassword) {
  * emailed to the user with a message reminding them to change it again.
  * @param {*} email address of the user
  */
-function resetPassword(email, newPassword, code) {
-    let user; // lookup the user data and pass it to the next promise
-
+function resetPassword(email, code, newPassword) {
+    if (!(email && code && newPassword)) {
+        return _handleMissingInputError(error.MISSING_PARAMETERS);
+    }   
+        
     return _getUserAndResetCode(email)
-    .then(data => {
-        if (!data) {
-            throw("invalid credentials");
-        } else {
-            user = data;
-        }
+    .then(user => {
+        if (!user) {
+            _handleAccountError(error.INVALID_RESET_CODE);
+        } 
 
         if (user.code == code) {
-            return _setUserPassword(email, newPassword);
+            return _setUserPassword(email, newPassword)
+                .then(() => _removeResetCode(user.memberid));
         } else {
-            throw("codes do not match");
+            _handleAccountError(error.INVALID_RESET_CODE);
         }
-    }).then(() => {
-        return _removeResetCode(user.memberid);
     });
 }
 
+
 function sendRecoveryEmail(email) {
+    if (!(email)) {
+        return _handleMissingInputError(error.MISSING_PARAMETERS);
+    }
+    
     let user; // store user data for the promise chain
 
-    return _getUserNoPassword(email)
+    return _getUserOnEmailNoPassword(email)
         .then(data => {
             if (!data) {
-                throw("invalid credentials");
+                _handleAccountError(error.INVALID_EMAIL);
             } else {
                 user = data;
             }
@@ -204,29 +246,29 @@ function sendRecoveryEmail(email) {
                 + user.rCode;
 
             //sendEmail(user.email, "Password Reset Code", msg);
-            console.log("sent recovery email: " + user.email);
+            console.dir({ message: "sent reset code", email: user.email, code: user.rCode });
+            return Promise.resolve();
         });
 }
 
 function isRecoveryCodeValid(email, code) {
+    if (!(email && code)) {
+        return _handleMissingInputError(error.MISSING_PARAMETERS);
+    }
+    
     return _getUserAndResetCode(email)
-    .then(data => {
-        if (!data) {
-            throw("invalid credentials");
+    .then(user => {
+        if (!user) {
+            _handleAccountError(error.INVALID_RESET_CODE);
+        } else if (user.code == code) {
+            return Promise.resolve();
         } else {
-            user = data;
-        }
-
-        if (user.code == code) {
-            return {success: true};
-        } else {
-            throw("codes do not match");
+            _handleAccountError(error.INVALID_RESET_CODE);
         }
     });
 }
 
-// Private helper functions below here
-
+// Helper functions
 function _isPassword(theUser, theirPassword) {
     let salt = theUser.salt;
     let ourSaltedHash = theUser.password; 
@@ -238,39 +280,101 @@ function _isPassword(theUser, theirPassword) {
     return ourSaltedHash == theirSaltedHash;
 }
 
-function _getUserOnEmailNoPassword(email) {
-    return db.one('SELECT * FROM Members WHERE Email=$1', [email]);
+function _stripUser(theUser) {
+    return {
+        first: theUser.firstname,
+        last: theUser.lastname,
+        username: theUser.username,
+        email: theUser.email
+    }
 }
 
-function _getUserOnUsernameNoPassword(username) {
-    return db.one('SELECT * FROM Members WHERE Username=$1', [username]);
+// Error handlers
+function _handleDbError(err) {
+    // print detailed error message to console
+    console.dir({error: error.DATABASE, message: err});
+    // return generic message to caller
+    throw(error.DATABASE);
 }
 
-function _getUserAndValidationCode(email) {
-    return db.one('SELECT * FROM Members LEFT JOIN RegistrationHashes ON ' + 
-                    'Members.memberid = RegistrationHashes.memberid ' +
-                    'WHERE Email=$1', [email]);
+function _handleAccountError(err) {
+    console.dir({error: err});
+    throw(err);
 }
 
-function  _getUserAndResetCode(email) {
-    return db.one('SELECT * FROM Members LEFT JOIN ResetCodes ON ' +
-        'Members.MemberID = ResetCodes.MemberID ' +
-        'WHERE Email=$1', [email])
+function _handleMissingInputError() {
+    return Promise.reject(error.MISSING_PARAMETERS);
+}
+
+// Database queries
+function _addUser(first, last, username, email, password, salt) {
+    let params = [first, last, username, email, password, salt]
+    
+    return db.none("INSERT INTO MEMBERS(FirstName, LastName, Username, Email, Password, Salt)"
+            + "VALUES ($1, $2, $3, $4, $5, $6)", params)
+        .catch(err => {
+            //custom error handler to determine if user already exists
+            if (err.code == "23505" && err.constraint == "members_email_key") {
+                throw error.EMAIL_ALREADY_EXISTS;
+            } else if (err.code == "23505" && err.constraint == "members_username_key") {
+                throw error.USERNAME_ALREADY_EXISTS;
+            } else {
+                _handleDbError(err);
+            }
+        })
+}
+
+function _setUserIsVerified(memberid) {
+    return db.none("UPDATE Members SET verification=1 WHERE memberid=$1", [memberid])
+        .catch(err => _handleDbError(err));
+}
+
+function _addRegistrationCode(memberId, hashCode) {
+    return db.none("INSERT INTO registrationhashes(memberid, hash) VALUES ($1, $2)",
+            [memberId, hashCode])
+        .catch(err => _handleDbError(err));
 }
 
 function _removeRegistrationCodes(memberid) {
-    return db.none("DELETE FROM registrationhashes WHERE memberid=$1", [memberid]);
+    return db.none("DELETE FROM registrationhashes WHERE memberid=$1", [memberid])
+        .catch(err => _handleDbError(err));
+}
+
+function _getUserOnEmailNoPassword(email) {
+    return db.oneOrNone('SELECT * FROM Members WHERE Email=$1', [email])
+        .catch(err => _handleDbError(err));
+}
+
+function _getUserOnUsernameNoPassword(username) {
+    return db.oneOrNone('SELECT * FROM Members WHERE Username=$1', [username])
+        .catch(err => _handleDbError(err));
+}
+
+function _getUserAndValidationCode(email) {
+    return db.oneOrNone('SELECT * FROM Members LEFT JOIN RegistrationHashes ON ' + 
+                    'Members.memberid = RegistrationHashes.memberid ' +
+                    'WHERE Email=$1', [email])
+        .catch(err => _handleDbError(err));
+}
+
+function  _getUserAndResetCode(email) {
+    return db.oneOrNone('SELECT * FROM Members LEFT JOIN ResetCodes ON ' +
+            'Members.MemberID = ResetCodes.MemberID ' +
+            'WHERE Email=$1', [email])
+        .catch(err => _handleDbError(err));
 }
 
 function _removeResetCode(memberid) {
     return db.none("DELETE FROM ResetCodes WHERE MemberID = $1", [memberid])
+        .catch(err => _handleDbError(err));
 }
 
 function _setUserPassword(email, newPassword) {
     let salt = crypto.randomBytes(32).toString("hex");
-    let saltedHash = getHash(password, salt);
+    let saltedHash = getHash(newPassword, salt);
 
-    return db.none("UPDATE Members SET Password = $1, Salt = $2 WHERE Email = $3", [saltedHash, salt, email]);
+    return db.none("UPDATE Members SET Password = $1, Salt = $2 WHERE Email = $3", [saltedHash, salt, email])
+        .catch(err => _handleDbError(err));
 }
 
 module.exports = {

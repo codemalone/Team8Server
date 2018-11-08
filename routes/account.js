@@ -18,16 +18,9 @@ router.post('/login/email', (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
 
-    if (email && password) {
-        account.loginUserOnEmail(email, password)
-            .then(user => { res.send({ success: true, user: user }) })
-            .catch(err => { res.send({ success: false, message: err }) })
-    } else {
-        res.send({
-            success: false,
-            message: "missing information"
-        })
-    }
+    account.loginUserOnEmail(email, password)
+        .then(user => { res.send({ success: true, user: user }) })
+        .catch(err => { res.send({ success: false, message: err }) })
 });
 
 /**
@@ -37,59 +30,35 @@ router.post('/login/username', (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
 
-    if (username && password) {
-        account.loginUserOnUsername(username, password)
-            .then(user => { res.send({ success: true, user: user }) })
-            .catch(err => { res.send({ success: false, message: err }) })
-    } else {
-        res.send({
-            success: false,
-            message: "missing information"
-        })
-    }
+    account.loginUserOnUsername(username, password)
+        .then(user => { res.send({ success: true, user: user }) })
+        .catch(err => { res.send({ success: false, message: err }) })
 });
 
 /**
  * Submits provided information to create a new user.
  */
 router.post('/register', (req, res) => {
-    var first = req.body['first'];
-    var last = req.body['last'];
-    var username = req.body['username'];
-    var email = req.body['email'];
-    var password = req.body['password'];
+    var first = req.body.first;
+    var last = req.body.last;
+    var username = req.body.username;
+    var email = req.body.email;
+    var password = req.body.password;
 
-    //Verify that the caller supplied all the parameters
-    //In js, empty strings or null values evaluate to false
-    if(first && last && username && email && password) {
-        account.registerUser(email, username, first, last, password)
-            .then(() => { res.send({ success: true }) })
-            .catch(err => { res.send({ success: false, message: err }) })
-        } else {
-            res.send({
-                success: false,
-                message: "missing information"
-            })
-        }
+    account.registerUser(first, last, username, email, password)
+        .then(() => { res.send({ success: true }) })
+        .catch(err => { res.send({ success: false, message: err }) })
 });
 
 /**
  * Sends an account email verification code.
  */
 router.get('/verification', (req, res) => {
-    let email = req.body.email;
+    let email = req.query.email;
 
-    if(email) {
-        sendEmailValidationLink(email)
-        .then(() => {
-            res.send({ success: true });
-        })
-        .catch(() => {
-            res.send({ success: false, message: 'error'});
-        })
-    } else {
-        res.send({ success: false });
-    }
+    account.sendValidationEmail(email)
+    .then(() => { res.send({ success: true }) })
+    .catch(err => { res.send({ success: false, message: err }) })
 });
 
 /**
@@ -97,12 +66,12 @@ router.get('/verification', (req, res) => {
  * 
  */
 router.post('/verification', (req, res) => {
-    let email = req.query.email;
-    let code = req.query.code;
+    let email = req.body.email;
+    let code = req.body.code;
     let response = {title: "Account Verification"};
         
     if(email && code) {
-        validateEmail(email, code)                
+        account.validateEmail(email, code)
         .then(() => {
             response.message = "Your email has been verified. You can now use our app!";
             res.render('index', response);
@@ -110,7 +79,7 @@ router.post('/verification', (req, res) => {
             //If anything happened, send generic error to user and print stacktrace to console
             response.message = "Unable to verify email address."
             res.render('index', response);
-            console.dir(err.message);
+            console.dir(err);
         })
     } else {
         response.message = "Invalid input.";
@@ -118,34 +87,27 @@ router.post('/verification', (req, res) => {
     }
 });
 
-
 /**
  * Sends a password reset code to the email.
  */
 router.get("/recover", (req, res) => {
     let email = req.query.email;
 
-    if (email) {
-        sendPasswordResetCode(email);
-        res.send({ success: true });
-    } else {
-        res.send({ success: false });
-    }
+    account.sendRecoveryEmail(email)
+    .then(() => { res.send({ success: true }) })
+    .catch(err => { res.send({ success: false, message: err }) })
 });
 
 /**
- * Verifies that a password reset code is valid.
+ * Verifies that a password reset code is valid. Does not change the user state.
  */
 router.post("/recover", (req, res) => {
     let email = req.body.email;
-    let password = req.body.password;
     let code = req.body.code;
 
-    if (email && password && code) {
-        //
-    } else {
-        res.send({ success: false });
-    }
+    account.isRecoveryCodeValid(email, code)
+    .then(() => { res.send({ success: true }) })
+    .catch(err => { res.send({ success: false, message: err }) })
 });
 
 /**
@@ -153,9 +115,13 @@ router.post("/recover", (req, res) => {
  * valid reset code.
  */
 router.post("/password/reset", (req, res) => {
-    
+    let email = req.body.email;
+    let code = req.body.code;
+    let newPassword = req.body.newPassword;
 
-
+    account.resetPassword(email, code, newPassword)
+    .then(() => { res.send({ success: true }) })
+    .catch(err => { res.send({ success: false, message: err }) })
 });
 
 /**
@@ -163,9 +129,13 @@ router.post("/password/reset", (req, res) => {
  * valid old password.
  */
 router.post("/password/change", (req, res) => {
+    let email = req.body.email;
+    let oldPassword = req.body.password;
+    let newPassword = req.body.newPassword;
 
-
-
+    account.changePassword(email, oldPassword, newPassword)
+    .then(() => { res.send({ success: true }) })
+    .catch(err => { res.send({ success: false, message: err }) })
 });
 
 module.exports = router;
