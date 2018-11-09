@@ -7,6 +7,9 @@ const getHash = require('./utils.js').getHash;
 //We use this create the SHA256 hash
 const crypto = require("crypto");
 
+//Nodemailer
+const sendEmail = require('./utils.js').sendEmail;
+
 //Error codes returned on failure
 const error = require('./error_codes.js');
 
