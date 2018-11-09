@@ -139,7 +139,7 @@ router.post("/password/reset", (req, res) => {
 });
 
 /**
- * Resets a password to the new password given the
+ * Changes a password to the new password given the
  * valid old password.
  */
 router.post("/password/change", (req, res) => {
@@ -148,6 +148,19 @@ router.post("/password/change", (req, res) => {
     let newPassword = req.body.newPassword;
 
     account.changePassword(email, oldPassword, newPassword)
+    .then(() => { res.send({ success: true }) })
+    .catch(err => { res.send({ success: false, message: err }) })
+});
+
+/**
+ * Changes a username given the valid account password.
+ */
+router.post("/username/change", (req, res) => {
+    let email = req.body.email;
+    let password = req.body.password;
+    let newUsername = req.body.newUsername;
+
+    account.changeUsername(email, password, newUsername)
     .then(() => { res.send({ success: true }) })
     .catch(err => { res.send({ success: false, message: err }) })
 });

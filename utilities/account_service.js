@@ -15,7 +15,7 @@ const error = require('./error_codes.js');
 
 // Configuration
 const ACCOUNT_VERIFICATION_CODE_EXPIRATION = 1440; // 1440 minutes = 24 hours
-const ACCOUNT_RECOVERY_CODE_EXPIRATION = 30; // minutes
+const ACCOUNT_RECOVERY_CODE_EXPIRATION = 60; // minutes
 
 /**
  * Checks if the provided email and password are correct.
@@ -191,7 +191,7 @@ function changePassword(email, oldPassword, newPassword) {
             if (!(user && _isPassword(user, oldPassword))) {
                 _handleAccountError(error.INVALID_CREDENTIALS);
             } else {
-                return _setUserPassword(email, newPassword);
+                return _setUserPassword(user.memberid, newPassword);
             }
         });
 }
@@ -207,18 +207,18 @@ function resetPassword(email, code, newPassword) {
     }   
         
     return _getUserAndResetCode(email)
-    .then(user => {
-        if (!user) {
-            _handleAccountError(error.INVALID_RESET_CODE);
-        } 
+        .then(user => {
+            if (!user) {
+                _handleAccountError(error.INVALID_RESET_CODE);
+            } 
 
-        if (user.code == getHash(code, user.salt)) {
-            return _setUserPassword(email, newPassword)
-                .then(() => _removeResetCode(user.memberid));
-        } else {
-            _handleAccountError(error.INVALID_RESET_CODE);
-        }
-    });
+            if (user.code == getHash(code, user.salt)) {
+                return _setUserPassword(user.memberid, newPassword)
+                    .then(() => _removeResetCode(user.memberid));
+            } else {
+                _handleAccountError(error.INVALID_RESET_CODE);
+            }
+        });
 }
 
 function sendRecoveryEmail(email) {
@@ -263,15 +263,34 @@ function isRecoveryCodeValid(email, code) {
     }
     
     return _getUserAndResetCode(email)
-    .then(user => {
-        if (!user) {
-            _handleAccountError(error.INVALID_RESET_CODE);
-        } else if (user.code == getHash(code, user.salt)) {
-            return Promise.resolve();
-        } else {
-            _handleAccountError(error.INVALID_RESET_CODE);
-        }
-    });
+        .then(user => {
+            if (!user) {
+                _handleAccountError(error.INVALID_RESET_CODE);
+            } else if (user.code == getHash(code, user.salt)) {
+                return Promise.resolve();
+            } else {
+                _handleAccountError(error.INVALID_RESET_CODE);
+            }
+        });
+}
+
+function changeUsername(email, password, newUsername) {
+    if (!(email && password && newUsername)) {
+        return _handleMissingInputError(error.MISSING_PARAMETERS);
+    }
+
+    return _getUserOnEmailNoPassword(email)
+        .then(user => {
+            if (!(user && _isPassword(user, password))) {
+                _handleAccountError(error.INVALID_CREDENTIALS);
+            }
+
+            if (user.username == newUsername) {
+                _handleAccountError(error.USERNAME_ALREADY_EXISTS);
+            } else {
+                return _setUsername(user.memberid, newUsername);
+            }
+        });
 }
 
 // Helper functions
@@ -386,15 +405,27 @@ function _setUserIsVerified(memberid) {
         .catch(err => _handleDbError(err));
 }
 
-function _setUserPassword(email, newPassword) {
+function _setUsername(memberid, newUsername) {
+    return db.none("UPDATE Members SET Username=$1 WHERE Memberid=$2", [newUsername, memberid])
+    .catch(err => {
+        //custom error handler to determine if username already exists
+        if (err.code == "23505" && err.constraint == "members_username_key") {
+            throw error.USERNAME_ALREADY_EXISTS;
+        } else {
+            _handleDbError(err);
+        }
+    })
+}
+
+function _setUserPassword(memberid, newPassword) {
     let salt = crypto.randomBytes(32).toString("hex");
     let saltedHash = getHash(newPassword, salt);
 
-    return db.none("UPDATE Members SET Password = $1, Salt = $2 WHERE Email = $3", [saltedHash, salt, email])
+    return db.none("UPDATE Members SET Password=$1, Salt=$2 WHERE Memberid=$3", [saltedHash, salt, memberid])
         .catch(err => _handleDbError(err));
 }
 
 module.exports = {
     loginUserOnEmail, loginUserOnUsername, registerUser, sendValidationEmail, validateEmail,
-    sendRecoveryEmail, isRecoveryCodeValid, resetPassword, changePassword
+    sendRecoveryEmail, isRecoveryCodeValid, resetPassword, changePassword, changeUsername
 }
