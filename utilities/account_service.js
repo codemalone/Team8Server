@@ -8,7 +8,7 @@ const getHash = require('./utils.js').getHash;
 const crypto = require("crypto");
 
 //Error codes returned on failure
-const error = require('./error.js');
+const error = require('./error_codes.js');
 
 // Configuration
 const ACCOUNT_VERIFICATION_CODE_EXPIRATION = 1440; // 1440 minutes = 24 hours
@@ -126,14 +126,13 @@ function sendValidationEmail(email) {
             return _addRegistrationCode(storedUser.memberid, vCodeHash);
         }).then(() => {
             // email a link to the user
-            let link = "http://tcss450a18-team8.herokuapp.com/account/verify?email=" 
+            let link = "http://tcss450a18-team8.herokuapp.com/account/verification?email=" 
                         + storedUser.email + "&code=" + storedUser.vCode;
             let msg = "Welcome to our app! Please verify this email address by clicking the link below.<p>"
                     + "<a href=\"" + link + "\">" + link + "</a>";
             
-            //sendEmail(user.email, "Verify your account", msg);
-            console.dir({ message: "sent verification", email: storedUser.email, code: storedUser.vCode });
-
+            sendEmail(user.email, "Verify your account", msg);
+            
             return Promise.resolve();
         });
 }
@@ -245,8 +244,8 @@ function sendRecoveryEmail(email) {
             let msg = "A password reset has been requested. Enter the code in the app when requested.<p>"
                 + storedUser.rCode;
 
-            //sendEmail(user.email, "Password Reset Code", msg);
-            console.dir({ message: "sent reset code", email: storedUser.email, code: storedUser.rCode });
+            sendEmail(user.email, "Password Reset Code", msg);
+            
             return Promise.resolve();
         });
 }

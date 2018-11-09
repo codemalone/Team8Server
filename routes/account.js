@@ -53,21 +53,27 @@ router.post('/register', (req, res) => {
 /**
  * Sends an account email verification code.
  */
-router.get('/verification', (req, res) => {
+router.get('/verification/send', (req, res) => {
     let email = req.query.email;
+    let response = {title: "Account Verification"};
 
     account.sendValidationEmail(email)
-    .then(() => { res.send({ success: true }) })
-    .catch(err => { res.send({ success: false, message: err }) })
+    .then(() => {
+        response.message = "A verification link has been sent to " + email + ".";
+        res.render('index', response);
+    }).catch(err => {
+        response.message = err.message; 
+        res.render('index', response);
+    });
 });
 
 /**
  * Checks an account email verification code.
  * 
  */
-router.post('/verification', (req, res) => {
-    let email = req.body.email;
-    let code = req.body.code;
+router.get('/verification', (req, res) => {
+    let email = req.query.email;
+    let code = req.query.code;
     let response = {title: "Account Verification"};
         
     if(email && code) {
@@ -76,8 +82,11 @@ router.post('/verification', (req, res) => {
             response.message = "Your email has been verified. You can now use our app!";
             res.render('index', response);
     }).catch((err) => {
+            let link = "http://tcss450a18-team8.herokuapp.com/account/verification/send?email=" 
+                        + email;
             //If anything happened, send generic error to user and print stacktrace to console
-            response.message = "Unable to verify email address."
+            response.message = "Unable to verify email address. " + err.message;
+            response.link = "a href=\"" + link + "\">Send another link.</a"
             res.render('index', response);
             console.dir(err);
         })
@@ -90,8 +99,8 @@ router.post('/verification', (req, res) => {
 /**
  * Sends a password reset code to the email.
  */
-router.get("/recover", (req, res) => {
-    let email = req.query.email;
+router.post("/recover/initiate", (req, res) => {
+    let email = req.body.email;
 
     account.sendRecoveryEmail(email)
     .then(() => { res.send({ success: true }) })
@@ -101,7 +110,7 @@ router.get("/recover", (req, res) => {
 /**
  * Verifies that a password reset code is valid. Does not change the user state.
  */
-router.post("/recover", (req, res) => {
+router.post("/recover/check", (req, res) => {
     let email = req.body.email;
     let code = req.body.code;
 
@@ -130,7 +139,7 @@ router.post("/password/reset", (req, res) => {
  */
 router.post("/password/change", (req, res) => {
     let email = req.body.email;
-    let oldPassword = req.body.password;
+    let oldPassword = req.body.oldPassword;
     let newPassword = req.body.newPassword;
 
     account.changePassword(email, oldPassword, newPassword)
