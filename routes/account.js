@@ -82,11 +82,16 @@ router.get('/verification', (req, res) => {
             response.message = "Your email has been verified. You can now use our app!";
             res.render('index', response);
     }).catch((err) => {
-            let link = "http://tcss450a18-team8.herokuapp.com/account/verification/send?email=" 
-                        + email;
             //If anything happened, send generic error to user and print stacktrace to console
             response.message = "Unable to verify email address. " + err.message;
-            response.link = "a href=\"" + link + "\">Send another link.</a"
+            
+            if (err.code == 209) {
+                //link is expired or otherwise invalid so give user option to send another one
+                let link = "http://tcss450a18-team8.herokuapp.com/account/verification/send?email=" 
+                    + email;
+                response.link = "a href=\"" + link + "\">Send another link.</a"
+            }
+            
             res.render('index', response);
             console.dir(err);
         })

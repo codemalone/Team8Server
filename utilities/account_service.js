@@ -150,24 +150,28 @@ function validateEmail(email, code) {
         return _handleMissingInputError(error.MISSING_PARAMETERS);
     }
         
-    return _getUserAndValidationCode(email)
+    return _getUserOnEmailNoPassword(email)
         .then(user => {
             if (!user) {
-                _handleAccountError(error.INVALID_VERIFICATION_CODE);
+                _handleAccountError(error.INVALID_EMAIL);
             } 
             
             // a user that has already been verified returns gracefully
             if (user.verification == 1) {
                 return Promise.resolve();
-            }
+            } 
 
-            // if the hash values match then update user account
-            if (user.hash == getHash(code, user.salt)) {
-                return _setUserIsVerified(user.memberid)
-                    .then(() => _removeRegistrationCodes(user.memberid));
-            } else {
-                _handleAccountError(error.INVALID_VERIFICATION_CODE);
-            }
+            //otherwise we check the code
+            return _getUserAndValidationCode(email)
+                .then(user => {
+                    // if the hash values match then update user account
+                    if (user && user.hash == getHash(code, user.salt)) {
+                        return _setUserIsVerified(user.memberid)
+                            .then(() => _removeRegistrationCodes(user.memberid));
+                    } else {
+                        _handleAccountError(error.INVALID_VERIFICATION_CODE);
+                    }
+                });
         });
 }
 
@@ -295,16 +299,19 @@ function _stripUser(theUser) {
 function _handleDbError(err) {
     // print detailed error message to console
     console.dir({error: error.DATABASE, message: err});
-    // return generic message to caller
+    // must throw error to prevent return to caller
     throw(error.DATABASE);
 }
 
 function _handleAccountError(err) {
+    // print error message to console
     console.dir({error: err});
+    // must throw error to prevent return to caller
     throw(err);
 }
 
 function _handleMissingInputError() {
+    // simple handling of null parameters rejects promise execution
     return Promise.reject(error.MISSING_PARAMETERS);
 }
 
