@@ -54,3 +54,19 @@ DROP TABLE IF EXISTS Demo;
 CREATE TABLE Demo (DemoID SERIAL PRIMARY KEY,
                         Text VARCHAR(255)
 );
+
+## added
+
+DROP TABLE IF EXISTS registrationhashes;
+CREATE TABLE registrationhashes (hash VARCHAR(255) PRIMARY KEY,
+                                 memberid INT NOT NULL,
+                                 TimeStamp TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+                                 FOREIGN KEY(memberid) REFERENCES Members(MemberID)
+);
+
+DROP TABLE IF EXISTS resetcodes;
+CREATE TABLE resetcodes (code VARCHAR(255) PRIMARY KEY,
+                         memberid INT NOT NULL,
+                         TimeStamp TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+                         FOREIGN KEY(memberid) REFERENCES Members(MemberID)
+);

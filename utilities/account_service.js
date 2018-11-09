@@ -206,7 +206,7 @@ function resetPassword(email, code, newPassword) {
             _handleAccountError(error.INVALID_RESET_CODE);
         } 
 
-        if (user.code == code) {
+        if (user.code == getHash(code, user.salt)) {
             return _setUserPassword(email, newPassword)
                 .then(() => _removeResetCode(user.memberid));
         } else {
@@ -215,38 +215,38 @@ function resetPassword(email, code, newPassword) {
     });
 }
 
-
 function sendRecoveryEmail(email) {
     if (!(email)) {
         return _handleMissingInputError(error.MISSING_PARAMETERS);
     }
     
-    let user; // store user data for the promise chain
+    // store user data for the promise chain
+    let storedUser; 
 
     return _getUserOnEmailNoPassword(email)
-        .then(data => {
-            if (!data) {
+        .then(user => {
+            if (!user) {
                 _handleAccountError(error.INVALID_EMAIL);
-            } else {
-                user = data;
-            }
-
+            } 
+            
+            storedUser = user;
+            
             // remove any existing validation codes
-            return _removeResetCode(user.memberid);
+            return _removeResetCode(storedUser.memberid);
         }).then(() => {
             // generate and store a new code
             let rCode = crypto.randomBytes(8).toString("hex");
-            user.rCode = rCode;
+            let rCodeHash = getHash(rCode, storedUser.salt);
+            storedUser.rCode = rCode;
 
-            return db.none("INSERT INTO ResetCodes(Code, MemberID) VALUES ($1, $2)",
-                [rCode, user.memberid]);
+            return _addResetCode(storedUser.memberid, rCodeHash);
         }).then(() => {
             // email a code to the user
             let msg = "A password reset has been requested. Enter the code in the app when requested.<p>"
-                + user.rCode;
+                + storedUser.rCode;
 
             //sendEmail(user.email, "Password Reset Code", msg);
-            console.dir({ message: "sent reset code", email: user.email, code: user.rCode });
+            console.dir({ message: "sent reset code", email: storedUser.email, code: storedUser.rCode });
             return Promise.resolve();
         });
 }
@@ -260,7 +260,7 @@ function isRecoveryCodeValid(email, code) {
     .then(user => {
         if (!user) {
             _handleAccountError(error.INVALID_RESET_CODE);
-        } else if (user.code == code) {
+        } else if (user.code == getHash(code, user.salt)) {
             return Promise.resolve();
         } else {
             _handleAccountError(error.INVALID_RESET_CODE);
@@ -324,19 +324,15 @@ function _addUser(first, last, username, email, password, salt) {
         })
 }
 
-function _setUserIsVerified(memberid) {
-    return db.none("UPDATE Members SET verification=1 WHERE memberid=$1", [memberid])
-        .catch(err => _handleDbError(err));
-}
-
 function _addRegistrationCode(memberId, hashCode) {
     return db.none("INSERT INTO registrationhashes(memberid, hash) VALUES ($1, $2)",
             [memberId, hashCode])
         .catch(err => _handleDbError(err));
 }
 
-function _removeRegistrationCodes(memberid) {
-    return db.none("DELETE FROM registrationhashes WHERE memberid=$1", [memberid])
+function _addResetCode(memberId, hashCode) {
+    return db.none("INSERT INTO ResetCodes(MemberID, code) VALUES ($1, $2)",
+            [memberId, hashCode])
         .catch(err => _handleDbError(err));
 }
 
@@ -350,22 +346,34 @@ function _getUserOnUsernameNoPassword(username) {
         .catch(err => _handleDbError(err));
 }
 
-function _getUserAndValidationCode(email) {
-    return db.oneOrNone('SELECT * FROM Members LEFT JOIN RegistrationHashes ON ' + 
-                    'Members.memberid = RegistrationHashes.memberid ' +
-                    'WHERE Email=$1', [email])
-        .catch(err => _handleDbError(err));
-}
-
 function  _getUserAndResetCode(email) {
     return db.oneOrNone('SELECT * FROM Members LEFT JOIN ResetCodes ON ' +
             'Members.MemberID = ResetCodes.MemberID ' +
-            'WHERE Email=$1', [email])
+            'WHERE Email=$1 AND current_timestamp - interval \'$2 minute\' < timestamp',
+            [email, ACCOUNT_RECOVERY_CODE_EXPIRATION])
+        .catch(err => _handleDbError(err));
+}
+
+function _getUserAndValidationCode(email) {
+    return db.oneOrNone('SELECT * FROM Members LEFT JOIN RegistrationHashes ON ' + 
+                    'Members.memberid = RegistrationHashes.memberid ' +
+                    'WHERE Email=$1 AND current_timestamp - interval \'$2 minute\' < timestamp',
+                    [email, ACCOUNT_VERIFICATION_CODE_EXPIRATION])
+        .catch(err => _handleDbError(err));
+}
+
+function _removeRegistrationCodes(memberid) {
+    return db.none("DELETE FROM registrationhashes WHERE memberid=$1", [memberid])
         .catch(err => _handleDbError(err));
 }
 
 function _removeResetCode(memberid) {
     return db.none("DELETE FROM ResetCodes WHERE MemberID = $1", [memberid])
+        .catch(err => _handleDbError(err));
+}
+
+function _setUserIsVerified(memberid) {
+    return db.none("UPDATE Members SET verification=1 WHERE memberid=$1", [memberid])
         .catch(err => _handleDbError(err));
 }
 
