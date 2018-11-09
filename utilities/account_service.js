@@ -241,7 +241,7 @@ function sendRecoveryEmail(email) {
             return _removeResetCode(storedUser.memberid);
         }).then(() => {
             // generate and store a new code
-            let rCode = crypto.randomBytes(8).toString("hex");
+            let rCode = crypto.randomBytes(4).toString("hex");
             let rCodeHash = getHash(rCode, storedUser.salt);
             storedUser.rCode = rCode;
 
