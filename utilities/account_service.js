@@ -134,9 +134,10 @@ function sendVerificationEmail(email) {
             let msg = "Welcome to our app! Please verify this email address by clicking the link below.<p>"
                     + "<a href=\"" + link + "\">" + link + "</a>";
             
-            sendEmail(storedUser.email, "Verify your account", msg);
-            
-            return Promise.resolve();
+            //sendEmail(storedUser.email, "Verify your account", msg);
+            console.dir("sent verification: " + storedUser.email);
+
+            return storedUser.email
         });
 }
 
@@ -149,14 +150,19 @@ function sendVerificationEmail(email) {
 function sendVerificationOnUsername(username) {
     // username is required
     if (!username) {
-        return _handleMissingInputError();
-    }
-
+        _handleMissingInputError();
+    }        
+        
     // lookup email and then forward the request
-    return _getUserOnUsernameNoPassword
-        .then(user => sendVerificationEmail(user.email));
+    return _getUserOnUsernameNoPassword(username)
+        .then(user => {
+            if (user) {
+                return sendVerificationEmail(user.email);    
+            } else {
+                _handleAccountError(error.INVALID_CREDENTIALS);
+            }
+        });
 }
-
 
 /**
  * Checks the provided validation code and marks a user as validated.

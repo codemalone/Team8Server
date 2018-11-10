@@ -51,34 +51,39 @@ router.post('/register', (req, res) => {
 });
 
 /**
- * Sends an account email verification code.
+ * Sends an account email verification code. A response message is sent in HTML
+ * format unless the query parameter response=json is received.
  */
 router.get('/verification/send', (req, res) => {
     let email = req.query.email;
     let username = req.query.username;
+    let responseFormat = req.query.response;
+
     let response = {title: "Account Verification"};
 
     //determine action based on query
-    if (username) {
-        account.sendVerificationOnUsername(username)
-        .then(theEmail => resolve(theEmail))
-        .catch(err => reject(err));
+    if (email) {
+        var action = account.sendVerificationEmail(email);
     } else {
-        account.sendVerificationEmail(email)
-        .then(theEmail => resolve(theEmail))
-        .catch(err => reject(err));
-    }
-    
-    function resolve(theEmail) {
-        response.message = "A verification link has been sent to " + theEmail + ".";
-        res.render('index', response);
+        var action = account.sendVerificationOnUsername(username);
     }
 
-    function reject(theError) {
-        response.message = theError.message; 
-        res.render('index', response);
-    }
-    
+    action.then(theEmail => {
+        if (responseFormat == 'json') {
+            res.send({ success: 'true', email: theEmail });
+        } else {
+            //render html response
+            response.message = "A verification link has been sent to " + theEmail + ".";
+            res.render('index', response);
+        }
+    }).catch(err => {
+        if (responseFormat == 'json') {
+            res.send({ success: 'false', message: err });
+        } else {
+            response.message = err.message; 
+            res.render('index', response);
+        }
+    });
 });
 
 /**
