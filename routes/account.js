@@ -60,18 +60,25 @@ router.get('/verification/send', (req, res) => {
 
     //determine action based on query
     if (username) {
-        var action = account.sendVerificationOnUsername(username);
+        account.sendVerificationOnUsername(username)
+        .then(theEmail => resolve(theEmail))
+        .catch(err => reject(err));
     } else {
-        var action = account.sendVerificationEmail(email);
+        account.sendVerificationEmail(email)
+        .then(theEmail => resolve(theEmail))
+        .catch(err => reject(err));
     }
     
-    action.then(theEmail => {
+    function resolve(theEmail) {
         response.message = "A verification link has been sent to " + theEmail + ".";
         res.render('index', response);
-    }).catch(err => {
-        response.message = err.message; 
+    }
+
+    function reject(theError) {
+        response.message = theError.message; 
         res.render('index', response);
-    });
+    }
+    
 });
 
 /**
