@@ -101,7 +101,7 @@ function registerUser(first, last, username, email, password) {
  * 
  * @param {string} email address of a registered user.
  */
-function sendValidationEmail(email) {
+function sendVerificationEmail(email) {
     // email is required
     if (!email) {
         return _handleMissingInputError();
@@ -139,6 +139,24 @@ function sendValidationEmail(email) {
             return Promise.resolve();
         });
 }
+
+/**
+ * Checks if a username is registered and the email is not validated. If the
+ * conditions hold then a validation link is sent to the user email address.
+ * 
+ * @param {string} username of a registered user.
+ */
+function sendVerificationOnUsername(username) {
+    // username is required
+    if (!username) {
+        return _handleMissingInputError();
+    }
+
+    // lookup email and then forward the request
+    return _getUserOnUsernameNoPassword
+        .then(user => sendVerificationEmail(user.email));
+}
+
 
 /**
  * Checks the provided validation code and marks a user as validated.
@@ -343,9 +361,9 @@ function _addUser(first, last, username, email, password, salt) {
         .catch(err => {
             //custom error handler to determine if user already exists
             if (err.code == "23505" && err.constraint == "members_email_key") {
-                throw error.EMAIL_ALREADY_EXISTS;
+                _handleAccountError(error.EMAIL_ALREADY_EXISTS);
             } else if (err.code == "23505" && err.constraint == "members_username_key") {
-                throw error.USERNAME_ALREADY_EXISTS;
+                _handleAccountError(error.USERNAME_ALREADY_EXISTS);
             } else {
                 _handleDbError(err);
             }
@@ -384,9 +402,9 @@ function  _getUserAndResetCode(email) {
 
 function _getUserAndValidationCode(email) {
     return db.oneOrNone('SELECT * FROM Members LEFT JOIN RegistrationHashes ON ' + 
-                    'Members.memberid = RegistrationHashes.memberid ' +
-                    'WHERE Email=$1 AND current_timestamp - interval \'$2 minute\' < timestamp',
-                    [email, ACCOUNT_VERIFICATION_CODE_EXPIRATION])
+            'Members.memberid = RegistrationHashes.memberid ' +
+            'WHERE Email=$1 AND current_timestamp - interval \'$2 minute\' < timestamp',
+            [email, ACCOUNT_VERIFICATION_CODE_EXPIRATION])
         .catch(err => _handleDbError(err));
 }
 
@@ -407,14 +425,14 @@ function _setUserIsVerified(memberid) {
 
 function _setUsername(memberid, newUsername) {
     return db.none("UPDATE Members SET Username=$1 WHERE Memberid=$2", [newUsername, memberid])
-    .catch(err => {
-        //custom error handler to determine if username already exists
-        if (err.code == "23505" && err.constraint == "members_username_key") {
-            throw error.USERNAME_ALREADY_EXISTS;
-        } else {
-            _handleDbError(err);
-        }
-    })
+        .catch(err => {
+            //custom error handler to determine if username already exists
+            if (err.code == "23505" && err.constraint == "members_username_key") {
+                _handleAccountError(error.USERNAME_ALREADY_EXISTS);
+            } else {
+                _handleDbError(err);
+            }
+        })
 }
 
 function _setUserPassword(memberid, newPassword) {
@@ -426,6 +444,6 @@ function _setUserPassword(memberid, newPassword) {
 }
 
 module.exports = {
-    loginUserOnEmail, loginUserOnUsername, registerUser, sendValidationEmail, validateEmail,
-    sendRecoveryEmail, isRecoveryCodeValid, resetPassword, changePassword, changeUsername
+    loginUserOnEmail, loginUserOnUsername, registerUser, sendVerificationEmail, sendVerificationOnUsername,
+    validateEmail, sendRecoveryEmail, isRecoveryCodeValid, resetPassword, changePassword, changeUsername
 }

@@ -55,11 +55,18 @@ router.post('/register', (req, res) => {
  */
 router.get('/verification/send', (req, res) => {
     let email = req.query.email;
+    let username = req.query.username;
     let response = {title: "Account Verification"};
 
-    account.sendValidationEmail(email)
-    .then(() => {
-        response.message = "A verification link has been sent to " + email + ".";
+    //determine action based on query
+    if (username) {
+        var action = account.sendVerificationOnUsername(username);
+    } else {
+        var action = account.sendVerificationEmail(email);
+    }
+    
+    action.then(theEmail => {
+        response.message = "A verification link has been sent to " + theEmail + ".";
         res.render('index', response);
     }).catch(err => {
         response.message = err.message; 
