@@ -134,9 +134,8 @@ function sendVerificationEmail(email) {
             let msg = "Welcome to our app! Please verify this email address by clicking the link below.<p>"
                     + "<a href=\"" + link + "\">" + link + "</a>";
             
-            //sendEmail(storedUser.email, "Verify your account", msg);
-            console.dir("sent verification: " + storedUser.email);
-
+            sendEmail(storedUser.email, "Verify your account", msg);
+            
             return storedUser.email
         });
 }
@@ -150,17 +149,17 @@ function sendVerificationEmail(email) {
 function sendVerificationOnUsername(username) {
     // username is required
     if (!username) {
-        _handleMissingInputError();
+        return _handleMissingInputError();
     }        
         
     // lookup email and then forward the request
     return _getUserOnUsernameNoPassword(username)
         .then(user => {
-            if (user) {
-                return sendVerificationEmail(user.email);    
-            } else {
+            if (!user) {
                 _handleAccountError(error.INVALID_CREDENTIALS);
             }
+            
+            return sendVerificationEmail(user.email);    
         });
 }
 
