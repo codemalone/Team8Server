@@ -7,6 +7,10 @@ const nodemailer = require('nodemailer');
 //We use this create the SHA256 hash
 const crypto = require("crypto");
 
+// Firebase
+let admin = require('./firebase_services.js').admin;
+let fcm_functions = require('./firebase_services.js').fcm_functions;
+
 /** 
  * Function to send an email address to the specified address.
  * @param {string} recipient a valid email address
@@ -51,5 +55,5 @@ function getHash(pw, salt) {
 }
 
 module.exports = { 
-    db, getHash, sendEmail 
+    db, getHash, sendEmail, admin, fcm_functions 
 };
