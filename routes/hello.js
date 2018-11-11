@@ -13,11 +13,9 @@ router.use(bodyParser.json());
 
 //add a post route to the router.
 router.post("/", (req, res) => {
-    require('../utilities/utils')
-    .fcm
-    _functions.sendToTopic("test", "test", "all");
+    require('../utilities/utils').fcm_functions.sendToTopic("test", "test", "all");
     res.send({
-    message: "Hello, you sent a POST request"
+        message: "Hello, you sent a POST request"
     });
 });
 
