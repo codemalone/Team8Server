@@ -2,6 +2,7 @@ var admin = require('firebase-admin');
 var serviceAccount = require("./team8app-59cc9-firebase-adminsdk-yrtax-2b09134d25.json");
 
 serviceAccount.private_key_id = process.env.FIREBASE_KEY_ID;
+serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY;
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
