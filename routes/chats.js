@@ -9,6 +9,7 @@ const chat = require('../utilities/chat_service');
 
 // for now we can put the fcm module here
 let fcm_functions = require('../utilities/utils').fcm_functions;
+let db = require('../utilities/utils').db;
 
 // create the router
 var router = express.Router();
@@ -91,6 +92,5 @@ router.post("/message/getAll", (req, res) => {
         })
     });
 });
-
 
 module.exports = router;
