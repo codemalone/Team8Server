@@ -22,3 +22,5 @@ router.post('/message/get', (req, res) => {
         .then(user => { res.send({ success: true, user: user }) })
         .catch(err => { res.send({ success: false, message: err }) })
 });
+
+module.exports = router;

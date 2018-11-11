@@ -20,3 +20,5 @@ router.post("/", (req, res) => {
     message: "Hello, you sent a POST request"
     });
 });
+
+module.exports = router;

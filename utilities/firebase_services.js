@@ -1,8 +1,7 @@
 var admin = require('firebase-admin');
-var serviceAccount = require("./team8app-59cc9-firebase-adminsdk-yrtax-ad8bda0a37.json");
+var serviceAccount = require("./team8app-59cc9-firebase-adminsdk-yrtax-2b09134d25.json");
 
-// add private key from heroku
-serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY;
+serviceAccount.private_key_id = process.env.FIREBASE_KEY_ID;
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
