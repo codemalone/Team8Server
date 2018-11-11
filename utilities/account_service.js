@@ -39,11 +39,13 @@ function loginUserOnEmail(email, theirPw, token) {
                 _handleAccountError(error.INVALID_CREDENTIALS);
             } else if (user.verification == 0) {
                 _handleAccountError(error.USER_NOT_VERIFIED);
-            } else if (token) {
-                storedUser = user;
+            } 
+            
+            storedUser = user;
+                        
+            if (token) {
                 return _setSessionToken(user.memberid, token);
             } else {
-                storedUser = user;
                 return Promise.resolve();
             }
         }).then(() => {
@@ -60,7 +62,7 @@ function loginUserOnEmail(email, theirPw, token) {
  * @throws {INVALID_CREDENTIALS} email or password not valid
  * @throws {USER_NOT_VERIFIED} email has not been verified
  */
-function loginUserOnUsername(username, theirPw) {
+function loginUserOnUsername(username, theirPw, token) {
     if (!(username && theirPw)) {
         return _handleMissingInputError();
     }
@@ -71,16 +73,18 @@ function loginUserOnUsername(username, theirPw) {
                 _handleAccountError(error.INVALID_CREDENTIALS);
             } else if (user.verification == 0) {
                 _handleAccountError(error.USER_NOT_VERIFIED);
-            } else if (token) {
-                storedUser = user;
+            } 
+            
+            storedUser = user;
+                        
+            if (token) {
                 return _setSessionToken(user.memberid, token);
             } else {
-                storedUser = user;
                 return Promise.resolve();
             }
         }).then(() => {
             return _stripUser(storedUser);
-        });           
+        });    
 }
 
 /**
