@@ -1,6 +1,8 @@
 {
   "type": "service_account",
   "project_id": "team8app-59cc9",
+  "private_key_id": "4624733d3b6fc26a69473af4e6220e79a157ddb7",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nVOID\n-----END PRIVATE KEY-----",
   "client_email": "firebase-adminsdk-yrtax@team8app-59cc9.iam.gserviceaccount.com",
   "client_id": "117369257110208775257",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",

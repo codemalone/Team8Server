@@ -1,12 +1,14 @@
-var admin = require('firebase-admin');
-var serviceAccount = require("./team8app-59cc9-firebase-adminsdk-yrtax-2b09134d25.json");
+var admin = require("firebase-admin");
+var serviceAccount = require("./firebase-team8app.json");
 
-serviceAccount.private_key_id = process.env.FIREBASE_KEY_ID;
-serviceAccount.private_key = process.env.FIREBASE_PRIVATE_KEY;
+// add private key from environment variable and initialize firebase
+serviceAccount.private_key = 
+        serviceAccount.private_key.toString()
+            .replace('VOID', process.env.FIREBASE_PRIVATE_KEY);
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://team8app-59cc9.firebaseio.com'
+    databaseURL: "https://team8app-59cc9.firebaseio.com"
 });
 
 //use to send message to all clients register to the Topoic (ALL)
