@@ -8,3 +8,4 @@ exports.USER_NOT_VERIFIED = {code: 207, message: "The email is not verified."};
 exports.INVALID_RESET_CODE = {code: 208, message: "The reset code is invalid or has expired."};
 exports.INVALID_VERIFICATION_CODE = {code: 209, message: "The verification code is invalid or has expired."};
 exports.USER_IS_VERIFIED = {code: 210, message: "The email is already verified."};
+exports.INVALID_TOKEN = {code: 301, message: "The token is invalid or has expired."};
