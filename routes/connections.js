@@ -13,15 +13,14 @@ let db = require('../utilities/utils').db;
 var router = express.Router();
 router.use(bodyParser.json());
 
-/**
- * Get all messages from any conversation between the caller and another user.
- */
+// send invite
 router.post('/add', (req, res) => {
     let token = req.body['token'];
     let otherUser = req.body['email'];
     res.send({"test":"testestes"});
 });
 
+// get list of current OR sent OR received connections
 router.post('/get', (req, res) => {
     let token = req.body['token'];
     let otherUser = req.body['email'];
@@ -33,24 +32,26 @@ router.post('/search', (req, res) => {
     let searchStrings = "" + req.body['string'].toLowerCase();
     searchStrings = searchStrings.split(" ", 2);
     let id;
-    //res.send({"test":connections.getIdFromToken(token)['memberid']});
     db.one("SELECT memberid FROM fcm_token WHERE token=$1", token)
     .then(data => {
         id = data['memberid']
         if (searchStrings[1] === undefined) {
-            db.any('SELECT * FROM members WHERE (LOWER(firstname) LIKE \'%$1#%\' OR LOWER(lastname) LIKE \'%$1#%\' OR LOWER(username) LIKE \'%$1#%\'' +
-             'OR LOWER(email)=$1) AND NOT memberid=$2', [searchStrings[0], id])
+            db.any('SELECT members.firstname, members.lastname, members.username, members.email, members.memberid, contacts.memberid_a, contacts.memberid_b, contacts.verified FROM members LEFT JOIN contacts ON (contacts.memberid_a=members.memberid OR contacts.memberid_b=members.memberid) WHERE (LOWER(members.firstname) LIKE \'%$1#%\' OR LOWER(members.lastname) LIKE \'%$1#%\' OR LOWER(members.username) LIKE \'%$1#%\'' +
+             'OR LOWER(members.email)=$1) AND NOT members.memberid=$2', [searchStrings[0], id])
             .then(data => {
+                data = 
                 res.send({
+                    "id":id,
                     "data":data
                 })
             }).catch(err => 
                 console.log(err));
         } else {
-            db.any('SELECT * FROM members WHERE (LOWER(firstname) LIKE \'%$1#%\' OR LOWER(firstname) LIKE \'%$2#%\' OR LOWER(lastname) LIKE \'%$1#%\'' + 
-            'OR LOWER(lastname) LIKE \'%$2#%\' OR LOWER(username) LIKE \'%$1#%\' OR LOWER(email)=$1) AND NOT memberid=$3', [searchStrings[0], searchStrings[1], id])
+            db.any('SELECT members.firstname, members.lastname, members.username, members.email, members.memberid, contacts.memberid_a, contacts.memberid_b, contacts.verified FROM members LEFT JOIN contacts ON (contacts.memberid_a=members.memberid OR contacts.memberid_b=members.memberid) WHERE (LOWER(members.firstname) LIKE \'%$1#%\' OR LOWER(members.firstname) LIKE \'%$2#%\' OR LOWER(members.lastname) LIKE \'%$1#%\' OR LOWER(members.lastname) LIKE \'%$2#%\' OR LOWER(members.username) LIKE \'%$1#%\'' +
+            'OR LOWER(members.email)=$1) AND NOT members.memberid=$2', [searchStrings[0], id])
             .then(data => {
                 res.send({
+                    "id":id,
                     "data":data
                 })
             }).catch(err => 
@@ -60,6 +61,7 @@ router.post('/search', (req, res) => {
         console.log(err));
 });
 
+// cancel invite OR decline invite OR delete connection
 router.post('/remove', (req, res) => {
     let token = req.body['token'];
     let otherUser = req.body['email'];
