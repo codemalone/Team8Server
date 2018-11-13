@@ -48,7 +48,7 @@ router.post('/search', (req, res) => {
                 console.log(err));
         } else {
             db.any('SELECT members.firstname, members.lastname, members.username, members.email, members.memberid, contacts.memberid_a, contacts.memberid_b, contacts.verified FROM members LEFT JOIN contacts ON (contacts.memberid_a=members.memberid OR contacts.memberid_b=members.memberid) WHERE (LOWER(members.firstname) LIKE \'%$1#%\' OR LOWER(members.firstname) LIKE \'%$2#%\' OR LOWER(members.lastname) LIKE \'%$1#%\' OR LOWER(members.lastname) LIKE \'%$2#%\' OR LOWER(members.username) LIKE \'%$1#%\'' +
-            'OR LOWER(members.email)=$1) AND NOT members.memberid=$2', [searchStrings[0], id])
+            'OR LOWER(members.email)=$1) AND NOT members.memberid=$3', [searchStrings[0], searchStrings[1], id])
             .then(data => {
                 res.send({
                     "id":id,
