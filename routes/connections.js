@@ -5,8 +5,9 @@ const express = require('express');
 const bodyParser = require("body-parser");
 
 // provides resource to verify and manage a member account
-const connections = require('../utilities/connections_service');
-const firebase = require('../utilities/firebase_services');
+const connections = require('../utilities/connections_service.js');
+
+// connection to Heroku database
 let db = require('../utilities/utils').db;
 
 // create the router
@@ -23,10 +24,37 @@ router.post('/add', (req, res) => {
 // get list of current OR sent OR received connections
 router.post('/get', (req, res) => {
     let token = req.body['token'];
-    let otherUser = req.body['email'];
-    res.send({"test":"testestes"});
+    
+    connections.getAllConnections(token)
+    .then(result => res.send({ success: true, data: result}))
+    .catch(err => res.send({ success: false, error: err}));
 });
 
+router.post('/get/active', (req, res) => {
+    let token = req.body['token'];
+    
+    connections.getActiveConnections(token)
+    .then(result => res.send({ success: true, data: result}))
+    .catch(err => res.send({ success: false, error: err}));
+});
+
+router.post('/get/pending', (req, res) => {
+    let token = req.body['token'];
+    
+    connections.getPendingConnections(token)
+    .then(result => res.send({ success: true, data: result}))
+    .catch(err => res.send({ success: false, error: err}));
+});
+
+router.post('/get/received', (req, res) => {
+    let token = req.body['token'];
+    
+    connections.getReceivedConnections(token)
+    .then(result => res.send({ success: true, data: result}))
+    .catch(err => res.send({ success: false, error: err}));
+});
+
+// connection search
 router.post('/search', (req, res) => {
     let token = req.body['token'];
     let searchStrings = "" + req.body['string'].toLowerCase();
