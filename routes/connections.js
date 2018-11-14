@@ -19,7 +19,7 @@ router.post('/get', (req, res) => {
     let token = req.body['token'];
     
     connections.getAllConnections(token)
-    .then(result => res.send({ success: true, data: result}))
+    .then(result => res.send({ id: connections._getIdFromToken(token), data: result}))
     .catch(err => res.send({ success: false, error: err}));
 });
 
@@ -27,7 +27,7 @@ router.post('/get/active', (req, res) => {
     let token = req.body['token'];
     
     connections.getActiveConnections(token)
-    .then(result => res.send({ success: true, data: result}))
+    .then(result => res.send({ id: connections._getIdFromToken(token), data: result}))
     .catch(err => res.send({ success: false, error: err}));
 });
 
@@ -35,7 +35,7 @@ router.post('/get/pending', (req, res) => {
     let token = req.body['token'];
     
     connections.getPendingConnections(token)
-    .then(result => res.send({ success: true, data: result}))
+    .then(result => res.send({ id: connections._getIdFromToken(token), data: result}))
     .catch(err => res.send({ success: false, error: err}));
 });
 
@@ -43,7 +43,7 @@ router.post('/get/received', (req, res) => {
     let token = req.body['token'];
     
     connections.getReceivedConnections(token)
-    .then(result => res.send({ success: true, data: result}))
+    .then(result => res.send({ id: connections._getIdFromToken(token), data: result}))
     .catch(err => res.send({ success: false, error: err}));
 });
 

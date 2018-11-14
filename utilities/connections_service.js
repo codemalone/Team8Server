@@ -119,5 +119,5 @@ function _handleMissingInputError() {
 
 // any function included in exports will be public
 module.exports = {
-    getAllConnections, getActiveConnections, getPendingConnections, getReceivedConnections
+    getAllConnections, getActiveConnections, getPendingConnections, getReceivedConnections, _getIdFromToken
 }
