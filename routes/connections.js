@@ -39,7 +39,7 @@ router.post('/get/pending', (req, res) => {
     db.one("SELECT memberid FROM fcm_token WHERE token=$1", token)
     .then(data => {
         connections.getPendingConnections(token)
-        .then(result => res.send({ id:connections._getIdFromToken(token), data: result}))
+        .then(result => res.send({ id:data['memberid'], data: result}))
         .catch(err => res.send({ success: false, error: err}));
     }).catch(err => res.send({ success: false, error: err}));
 });
@@ -49,7 +49,7 @@ router.post('/get/received', (req, res) => {
     db.one("SELECT memberid FROM fcm_token WHERE token=$1", token)
     .then(data => {
         connections.getReceivedConnections(token)
-        .then(result => res.send({ id:connections._getIdFromToken(token), data: result}))
+        .then(result => res.send({ id:data['memberid'], data: result}))
         .catch(err => res.send({ success: false, error: err}));
     }).catch(err => res.send({ success: false, error: err}));
 });
