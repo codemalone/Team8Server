@@ -125,7 +125,12 @@ router.post('/add', (req, res) => {
                     "success": true
                 })
             }).catch(err => 
-                console.log(err));
+                db.any('UPDATE contacts SET verified=1 WHERE (memberid_a=$1 AND memberid_b=$2) OR (memberid_a=$2 AND memberid_b=$1)', [data['memberid'], otherData['memberid']])
+                .then(data => {
+                    res.send({
+                        "success": true
+                    })
+                }).catch(err => console.log(err)));
         }).catch(err => console.log(err));
     }).catch(err => 
         console.log(err));
