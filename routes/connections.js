@@ -19,32 +19,39 @@ router.post('/get', (req, res) => {
     let token = req.body['token'];
     
     connections.getAllConnections(token)
-    .then(result => res.send({ id: connections._getIdFromToken(token), data: result}))
+    .then(result => res.send({ id:connections._getIdFromToken(token), data: result}))
     .catch(err => res.send({ success: false, error: err}));
 });
 
+
 router.post('/get/active', (req, res) => {
     let token = req.body['token'];
-    
-    connections.getActiveConnections(token)
-    .then(result => res.send({ id: connections._getIdFromToken(token), data: result}))
-    .catch(err => res.send({ success: false, error: err}));
+    db.one("SELECT memberid FROM fcm_token WHERE token=$1", token)
+    .then(data => {
+        connections.getActiveConnections(token)
+        .then(result => res.send({ id:data['memberid'], data: result}))
+        .catch(err => res.send({ success: false, error: err}));
+    }).catch(err => res.send({ success: false, error: err}));
 });
 
 router.post('/get/pending', (req, res) => {
     let token = req.body['token'];
-    
-    connections.getPendingConnections(token)
-    .then(result => res.send({ id: connections._getIdFromToken(token), data: result}))
-    .catch(err => res.send({ success: false, error: err}));
+    db.one("SELECT memberid FROM fcm_token WHERE token=$1", token)
+    .then(data => {
+        connections.getPendingConnections(token)
+        .then(result => res.send({ id:connections._getIdFromToken(token), data: result}))
+        .catch(err => res.send({ success: false, error: err}));
+    }).catch(err => res.send({ success: false, error: err}));
 });
 
 router.post('/get/received', (req, res) => {
     let token = req.body['token'];
-    
-    connections.getReceivedConnections(token)
-    .then(result => res.send({ id: connections._getIdFromToken(token), data: result}))
-    .catch(err => res.send({ success: false, error: err}));
+    db.one("SELECT memberid FROM fcm_token WHERE token=$1", token)
+    .then(data => {
+        connections.getReceivedConnections(token)
+        .then(result => res.send({ id:connections._getIdFromToken(token), data: result}))
+        .catch(err => res.send({ success: false, error: err}));
+    }).catch(err => res.send({ success: false, error: err}));
 });
 
 // connection search
