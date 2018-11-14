@@ -14,13 +14,6 @@ let db = require('../utilities/utils').db;
 var router = express.Router();
 router.use(bodyParser.json());
 
-// send invite
-router.post('/add', (req, res) => {
-    let token = req.body['token'];
-    let otherUser = req.body['email'];
-    res.send({"test":"testestes"});
-});
-
 // get list of current OR sent OR received connections
 router.post('/get', (req, res) => {
     let token = req.body['token'];
@@ -61,39 +54,74 @@ router.post('/search', (req, res) => {
     searchStrings = searchStrings.split(" ", 2);
     let id;
     db.one("SELECT memberid FROM fcm_token WHERE token=$1", token)
-    .then(data => {
-        id = data['memberid']
-        if (searchStrings[1] === undefined) {
-            db.any('SELECT members.firstname, members.lastname, members.username, members.email, members.memberid, contacts.memberid_a, contacts.memberid_b, contacts.verified FROM members LEFT JOIN contacts ON (contacts.memberid_a=members.memberid OR contacts.memberid_b=members.memberid) WHERE (LOWER(members.firstname) LIKE \'%$1#%\' OR LOWER(members.lastname) LIKE \'%$1#%\' OR LOWER(members.username) LIKE \'%$1#%\'' +
-             'OR LOWER(members.email)=$1) AND NOT members.memberid=$2', [searchStrings[0], id])
-            .then(data => {
-                data = 
-                res.send({
-                    "id":id,
-                    "data":data
-                })
-            }).catch(err => 
-                console.log(err));
-        } else {
-            db.any('SELECT members.firstname, members.lastname, members.username, members.email, members.memberid, contacts.memberid_a, contacts.memberid_b, contacts.verified FROM members LEFT JOIN contacts ON (contacts.memberid_a=members.memberid OR contacts.memberid_b=members.memberid) WHERE (LOWER(members.firstname) LIKE \'%$1#%\' OR LOWER(members.firstname) LIKE \'%$2#%\' OR LOWER(members.lastname) LIKE \'%$1#%\' OR LOWER(members.lastname) LIKE \'%$2#%\' OR LOWER(members.username) LIKE \'%$1#%\'' +
-            'OR LOWER(members.email)=$1) AND NOT members.memberid=$3', [searchStrings[0], searchStrings[1], id])
-            .then(data => {
-                res.send({
-                    "id":id,
-                    "data":data
-                })
-            }).catch(err => 
-                console.log(err));
-        }
-    }).catch(err => 
-        console.log(err));
+        .then(data => {
+            id = data['memberid']
+            if (searchStrings[1] === undefined) {
+                db.any('SELECT DISTINCT members.firstname, members.lastname, members.username, members.email, members.memberid, contacts.memberid_a, contacts.memberid_b, contacts.verified FROM members LEFT JOIN contacts ON ((contacts.memberid_a=members.memberid OR contacts.memberid_b=members.memberid) AND (contacts.memberid_a=$2 OR contacts.memberid_b=$2)) WHERE (LOWER(members.firstname) LIKE \'%$1#%\' OR LOWER(members.lastname) LIKE \'%$1#%\' OR LOWER(members.username) LIKE \'%$1#%\'' +
+                    'OR LOWER(members.email)=$1) AND NOT members.memberid=$2', [searchStrings[0], id])
+                    .then(data => {
+                        data =
+                            res.send({
+                                "id": id,
+                                "data": data
+                            })
+                    }).catch(err =>
+                        console.log(err));
+            } else {
+                db.any('SELECT DISTINCT members.firstname, members.lastname, members.username, members.email, members.memberid, contacts.memberid_a, contacts.memberid_b, contacts.verified FROM members LEFT JOIN contacts ON ((contacts.memberid_a=members.memberid OR contacts.memberid_b=members.memberid) AND (contacts.memberid_a=$3 OR contacts.memberid_b=$3)) WHERE (LOWER(members.firstname) LIKE \'%$1#%\' OR LOWER(members.firstname) LIKE \'%$2#%\' OR LOWER(members.lastname) LIKE \'%$1#%\' OR LOWER(members.lastname) LIKE \'%$2#%\' OR LOWER(members.username) LIKE \'%$1#%\'' +
+                    'OR LOWER(members.email)=$1) AND NOT members.memberid=$3', [searchStrings[0], searchStrings[1], id])
+                    .then(data => {
+                        res.send({
+                            "id": id,
+                            "data": data
+                        })
+                    }).catch(err =>
+                        console.log(err));
+            }
+        }).catch(err =>
+            console.log(err));
 });
 
 // cancel invite OR decline invite OR delete connection
 router.post('/remove', (req, res) => {
     let token = req.body['token'];
     let otherUser = req.body['email'];
-    res.send({"test":"testestes"});
+    db.one('SELECT memberid FROM fcm_token WHERE token=$1', token)
+        .then(data => {
+            id = data['memberid']
+            db.one('SELECT memberid FROM members WHERE email=$1', otherUser)
+                .then(otherData => {
+                    db.one('DELETE FROM contacts WHERE (memberid_a=$1 OR memberid_b=$1) AND (memberid_a=$2 OR memberid_b=$2)', [otherData['memberid'], id])
+                    .then(data => {
+                        res.send({
+                            "success": true
+                        })
+                    }).catch(err => 
+                        console.log(err));
+                }).catch(err =>
+                    console.log(err));
+        }).catch(err =>
+            console.log(err));
+});
+
+// send invite
+router.post('/add', (req, res) => {
+    let token = req.body['token'];
+    let otherUser = req.body['email'];
+    db.one('SELECT memberid FROM fcm_token WHERE token=$1', token)
+    .then(data => {
+        db.one('SELECT memberid FROM members WHERE email=$1', otherUser)
+        .then(otherData => {
+            db.any('INSERT INTO contacts (memberid_a, memberid_b, verified) VALUES ($1, $2, 0) ON CONFLICT ON CONSTRAINT memberConstraint DO UPDATE SET verified=1', [data['memberid'], otherData['memberid']])
+            .then(data => {
+                res.send({
+                    "success": true
+                })
+            }).catch(err => 
+                console.log(err));
+        }).catch(err => console.log(err));
+    }).catch(err => 
+        console.log(err));
 });
 
 module.exports = router;
