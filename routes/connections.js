@@ -98,7 +98,7 @@ router.post('/remove', (req, res) => {
             id = data['memberid']
             db.one('SELECT memberid FROM members WHERE email=$1', otherUser)
                 .then(otherData => {
-                    db.one('DELETE FROM contacts WHERE (memberid_a=$1 OR memberid_b=$1) AND (memberid_a=$2 OR memberid_b=$2)', [otherData['memberid'], id])
+                    db.none('DELETE FROM contacts WHERE (memberid_a=$1 OR memberid_b=$1) AND (memberid_a=$2 OR memberid_b=$2)', [otherData['memberid'], id])
                     .then(data => {
                         res.send({
                             "success": true
