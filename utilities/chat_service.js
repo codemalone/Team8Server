@@ -21,9 +21,11 @@ function addConversation(token, theirEmail) {
     return _getUserOnToken(token)
         .then(user => {
             myMemberId = user.memberid;
+            // check if the other user has a connection to the caller
             return _getConnectionId(myMemberId, theirEmail);
         }).then(connection => {
             theirMemberId = connection.memberid;
+            // check if the two users have an active chat
             return _getChatId(myMemberId, theirMemberId)
         }).then(chat => {
             if (chat) {
@@ -56,10 +58,15 @@ function getAllMessages(token, chatId) {
         return _handleMissingInputError();
     }
 
-    // start a chain of events that eventually returns something useful
+    let result = { chatId };
+
     return _getUserOnToken(token)
-        .then(() => _getAllMessages(chatId));
-}
+        .then(() => _getAllMessages(chatId))
+        .then(messages => {
+            result.messages = messages;
+            return result;
+        })
+}       
 
 function sendMessage(token, chatId, message) {
     if (!(chatId && message && token)) {
@@ -67,14 +74,13 @@ function sendMessage(token, chatId, message) {
         return _handleMissingInputError();
     }
 
-    let user;
-
+    
     // get user on email because that's all we have
     return _getUserOnToken(token)
         .then(data => {
             user = data;
             return _addMessage(chatId, message, user.memberid);
-        }).then(() => _sendGlobalMessage(user.email, message));
+        }).then(() => _sendChatMessage(user.username, chatId, message));
 }
 
 // Helper functions for synchronous repeated work
@@ -105,8 +111,8 @@ function _getUserOnToken(token) {
 }
 
 function _getAllMessages(chatId) {
-    let query = `SELECT Members.Email, Messages.Message, 
-    to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
+    let query = `SELECT Members.Email, Members.Username, Messages.Message, 
+    to_char(Messages.Timestamp AT TIME ZONE 'PST', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
     FROM Messages
     INNER JOIN Members ON Messages.MemberId=Members.MemberId
     WHERE ChatId=$1 
@@ -175,7 +181,16 @@ function _sendGlobalMessage(senderEmail, message) {
             rows.forEach(element => {
                 fcm_functions.sendToIndividual(element['token'], message, senderEmail);
             });
-            Promise.resolve();
+        })
+        .catch(err => _handleDbError(err));
+}
+
+function _sendChatMessage(senderName, chatId, message) {
+    return db.manyOrNone('SELECT token FROM FCM_Token NATURAL JOIN ChatMembers WHERE chatid=$1', [chatId])
+        .then(rows => {
+            rows.forEach(element => {
+                fcm_functions.sendToIndividual(element['token'], message, senderName);
+            });
         })
         .catch(err => _handleDbError(err));
 }

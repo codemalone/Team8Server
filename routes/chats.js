@@ -16,7 +16,8 @@ var router = express.Router();
 router.use(bodyParser.json());
 
 /**
- * Begin a new chat session with an existing connection.
+ * Begin a new chat session with an existing connection. Returns the chatId.
+ * If a chat already exists then it also returns the previous messages.
  */
 router.post('/add', (req, res) => {
     let token = req.body.token;
@@ -28,8 +29,6 @@ router.post('/add', (req, res) => {
 
 })
 
-
-
 /**
  * Get all messages from any conversation between the caller and another user.
  */
@@ -38,7 +37,7 @@ router.post('/message/getAll', (req, res) => {
     let chatId = req.body.chatId;
 
     chat.getAllMessages(token, chatId)
-        .then(user => { res.send({ success: true, user: user }) })
+        .then(data => { res.send({ success: true, data: data }) })
         .catch(err => { res.send({ success: false, message: err }) })
 });
 
@@ -49,14 +48,6 @@ router.post('/message/send', (req, res) => {
 
     chat.sendMessage(token, chatId, message)
         .then(() => { res.send({ success: true }) })
-        .catch(err => { res.send({ success: false, message: err }) })
-});
-
-router.post('/message/tokenTest', (req, res) => {
-    let token = req.body.token;
-
-    chat.somethingThatNeedsUser(token)
-        .then(user => { res.send({ success: true, user: user }) })
         .catch(err => { res.send({ success: false, message: err }) })
 });
 

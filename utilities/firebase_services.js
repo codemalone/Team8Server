@@ -61,7 +61,7 @@ function sendToIndividual(token, msg, from) {
     "token": token
     };
 
-console.log(message);
+//console.log(message);
 
 // Send a message to the device corresponding to the provided
 // registration token.
