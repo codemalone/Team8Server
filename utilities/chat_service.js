@@ -15,6 +15,7 @@ function addConversation(token, theirEmail) {
 
     let myMemberId;
     let theirMemberId;
+    let isNewConversation;
     let result = new Object();
     
     return _getUserOnToken(token)
@@ -23,24 +24,23 @@ function addConversation(token, theirEmail) {
             return _getConnectionId(myMemberId, theirEmail);
         }).then(connection => {
             theirMemberId = connection.memberid;
-
-            // determine if user has a current chat with this connection
             return _getChatId(myMemberId, theirMemberId)
         }).then(chat => {
-            if (!chat) {
-                return _createNewChat(myMemberId, theirMemberId);
+            if (chat) {
+                result.chatId = chat.chatid;
+                return _getAllMessages(chat.chatId);
             } else {
-                return chat;
+                isNewConversation = true;
+                return _createNewChat(myMemberId, theirMemberId);
             }
-        }).then(chat => {
-            // we now have a chat session between two contacts so
-            // return the chatId and any existing messages.
-            result.chatId = chat.chatid;
-
-            return _getAllMessages(chat.chatid);
-        }).then(messages => {
-            result.messages = messages;
-
+        }).then(data => {
+            if (isNewConversation) {
+                result.chatId = data.chatid;
+                result.messages = new Array();
+            } else {
+                resultmessages = data.messages;
+            }
+            
             return result;
         })
 }
@@ -148,10 +148,15 @@ function _createNewChat(myId, theirId) {
     let newChatInsert = `INSERT INTO Chats(name) VALUES ('Private Chat') RETURNING chatid`
     let membersInsert = `INSERT INTO ChatMembers(chatid, memberid) VALUES ($1, $2),($1, $3)`
 
-    db.task(t => {
+    let result;
+
+    return db.task(t => {
         return t.one(newChatInsert)
-            .then(newChat => {
-                return t.none(membersInsert, [newChat.chatid, myId, theirId]);
+            .then(data => {
+                result = data;
+                return t.none(membersInsert, [data.chatid, myId, theirId]);
+            }).then(() => {
+                return result;
             }).catch(err => _handleDbError(err));
     });
 }
