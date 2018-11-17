@@ -7,6 +7,44 @@ let fcm_functions = require('../utilities/utils').fcm_functions;
 //Error codes returned on failure
 const error = require('./error_codes.js');
 
+
+function addConversation(token, theirEmail) {
+    if(!(token && theirEmail)) {
+        return _handleMissingInputError();
+    }
+
+    let myMemberId;
+    let theirMemberId;
+    let result = new Object();
+    
+    return _getUserOnToken(token)
+        .then(user => {
+            myMemberId = user.memberid;
+            return _getConnectionId(myMemberId, theirEmail);
+        }).then(connection => {
+            theirMemberId = connection.memberid;
+
+            // determine if user has a current chat with this connection
+            return _getChatId(myMemberId, theirMemberId)
+        }).then(chat => {
+            if (!chat) {
+                return _createNewChat(myMemberId, theirMemberId);
+            } else {
+                return chat;
+            }
+        }).then(chat => {
+            // we now have a chat session between two contacts so
+            // return the chatId and any existing messages.
+            result.chatId = chat.chatid;
+
+            return _getAllMessages(chat.chatid);
+        }).then(messages => {
+            result.messages = messages;
+
+            return result;
+        })
+}
+
 /**
  * Get all messages for the given chatId.
  * @param {*} token 
@@ -23,33 +61,20 @@ function getAllMessages(token, chatId) {
         .then(() => _getAllMessages(chatId));
 }
 
-
-function somethingThatNeedsUser(token) {
-    if (!(token)) {
-        return _handleMissingInputError();
-    }
-
-    //check the token
-    return _getUserOnToken(token)
-        .then(user => {
-
-            //now we have a user object
-            console.log("Hello " + user.firstname);
-
-            return _stripUser(user);
-        });
-}
-
-function sendMessage(token, email, chatId, message) {
-    if (!(email, chatId, message)) {
+function sendMessage(token, chatId, message) {
+    if (!(chatId && message && token)) {
         // token not required yet because we are not passing it from app
         return _handleMissingInputError();
     }
 
+    let user;
+
     // get user on email because that's all we have
-    return _getUserOnEmailNoPassword(email) 
-        .then(user => _addMessage(chatId, message, user.memberid))
-        .then(() => _sendGlobalMessage(email, message));
+    return _getUserOnToken(token)
+        .then(data => {
+            user = data;
+            return _addMessage(chatId, message, user.memberid);
+        }).then(() => _sendGlobalMessage(user.email, message));
 }
 
 // Helper functions for synchronous repeated work
@@ -91,6 +116,47 @@ function _getAllMessages(chatId) {
         .catch(err => _handleDbError(err));
 }
 
+function _getConnectionId(myId, theirEmail) {
+    let query = `SELECT DISTINCT AllConnections.memberid FROM
+                 (
+                    (SELECT * FROM Members INNER JOIN Contacts ON Members.memberid=Contacts.memberid_b WHERE memberid_a=$1 AND verified=1)
+                    UNION
+                    (SELECT * FROM Members INNER JOIN Contacts ON Members.memberid=Contacts.memberid_a WHERE memberid_b=$1 AND verified=1)
+                 ) AS AllConnections
+                 WHERE AllConnections.email=$2`
+
+    return db.one(query, [myId, theirEmail])
+        .catch(err => {
+            if (err.code == 0) {
+                _handleSessionError(error.INVALID_CONNECTION);
+            } else {
+                _handleDbError(err);
+            }
+        });
+}
+
+function _getChatId(myId, theirId) {
+    let query = `select TblA.chatid FROM chatmembers AS TblA INNER JOIN chatmembers AS TblB ON TblA.chatid=TblB.chatid
+                 WHERE TblA.memberid=$1 AND TblB.memberid=$2`
+
+    // this query only works for "private chat" where exactly one chat includes both users
+    return db.oneOrNone(query, [myId, theirId])
+        .catch(err => _handleDbError(err));
+}
+
+function _createNewChat(myId, theirId) {
+    let newChatInsert = `INSERT INTO Chats(name) VALUES ('Private Chat') RETURNING chatid`
+    let membersInsert = `INSERT INTO ChatMembers(chatid, memberid) VALUES ($1, $2),($1, $3)`
+
+    db.task(t => {
+        return t.one(newChatInsert)
+            .then(newChat => {
+                return t.none(membersInsert, [newChat.chatid, myId, theirId]);
+            }).catch(err => _handleDbError(err));
+    });
+}
+
+
 function _addMessage(chatId, message, memberId) {
     let insert = 'INSERT INTO Messages(ChatId, Message, MemberId) VALUES($1, $2, $3)';
                         
@@ -115,7 +181,6 @@ function _getUserOnEmailNoPassword(email) {
         .catch(err => _handleDbError(err));
 }
 
-
 // Error handlers
 function _handleDbError(err) {
     // print detailed error message to console
@@ -138,5 +203,5 @@ function _handleMissingInputError() {
 
 // any function included in exports will be public
 module.exports = {
-    getAllMessages, sendMessage, somethingThatNeedsUser
+    getAllMessages, sendMessage, addConversation
 }

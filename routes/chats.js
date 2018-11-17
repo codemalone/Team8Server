@@ -16,6 +16,21 @@ var router = express.Router();
 router.use(bodyParser.json());
 
 /**
+ * Begin a new chat session with an existing connection.
+ */
+router.post('/add', (req, res) => {
+    let token = req.body.token;
+    let theirEmail = req.body.theirEmail;
+
+    chat.addConversation(token, theirEmail)
+        .then(data => { res.send({ success: true, data: data }) })
+        .catch(err => { res.send({ success: false, message: err }) })
+
+})
+
+
+
+/**
  * Get all messages from any conversation between the caller and another user.
  */
 router.post('/message/getAll', (req, res) => {
@@ -29,11 +44,10 @@ router.post('/message/getAll', (req, res) => {
 
 router.post('/message/send', (req, res) => {
     let token = req.body.token;
-    let email = req.body.email;
     let chatId = req.body.chatId;
     let message = req.body.message;
 
-    chat.sendMessage(token, email, chatId, message)
+    chat.sendMessage(token, chatId, message)
         .then(() => { res.send({ success: true }) })
         .catch(err => { res.send({ success: false, message: err }) })
 });
