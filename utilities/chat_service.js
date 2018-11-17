@@ -28,7 +28,7 @@ function addConversation(token, theirEmail) {
         }).then(chat => {
             if (chat) {
                 result.chatId = chat.chatid;
-                return _getAllMessages(chat.chatId);
+                return _getAllMessages(chat.chatid);
             } else {
                 isNewConversation = true;
                 return _createNewChat(myMemberId, theirMemberId);
@@ -38,7 +38,7 @@ function addConversation(token, theirEmail) {
                 result.chatId = data.chatid;
                 result.messages = new Array();
             } else {
-                resultmessages = data.messages;
+                result.messages = data;
             }
             
             return result;
