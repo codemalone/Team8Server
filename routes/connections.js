@@ -121,7 +121,7 @@ router.post('/add', (req, res) => {
         .then(otherData => {
             db.any('INSERT INTO contacts (memberid_a, memberid_b, verified) VALUES ($1, $2, 0) ON CONFLICT ON CONSTRAINT memberConstraint DO UPDATE SET verified=1', [data['memberid'], otherData['memberid']])
             .then(nullData => {
-                connections.notifyConnectionRequest(data['memberid'], otherUser['memberid']);
+                connections.notifyConnectionRequest(data['memberid'], otherData['memberid']);
                 res.send({
                     "success": true
                 })
