@@ -120,7 +120,8 @@ router.post('/add', (req, res) => {
         db.one('SELECT memberid FROM members WHERE email=$1', otherUser)
         .then(otherData => {
             db.any('INSERT INTO contacts (memberid_a, memberid_b, verified) VALUES ($1, $2, 0) ON CONFLICT ON CONSTRAINT memberConstraint DO UPDATE SET verified=1', [data['memberid'], otherData['memberid']])
-            .then(data => {
+            .then(nullData => {
+                connections.notifyConnectionRequest(data['memberid'], otherUser['memberid']);
                 res.send({
                     "success": true
                 })

@@ -63,6 +63,28 @@ function sendToIndividual(token, msg, from) {
 
 //console.log(message);
 
+function notifyConnectionRequest(token, sender) {
+    //build the message for FCM to send
+    var message = {
+        android: {
+            notification: {
+                title: 'New Connection Request',
+                body: sender.concat(' has added you as a Connection.'),
+                color: "#0000FF",
+                icon: '@drawable/ic_notification_overlay'
+            },
+        data: {
+            "type": "newcontact",
+            "sender": sender,
+            "message": sender.concat(' has added you as a Connection.')
+        }
+    },
+    "token": token
+    };
+
+}
+
+
 // Send a message to the device corresponding to the provided
 // registration token.
 admin.messaging().send(message)
@@ -75,7 +97,7 @@ admin.messaging().send(message)
     });
 }
 
-let fcm_functions = { sendToTopic, sendToIndividual };
+let fcm_functions = { sendToTopic, sendToIndividual, notifyConnectionRequest };
 
 module.exports = {
     admin, fcm_functions

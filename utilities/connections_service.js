@@ -4,6 +4,9 @@ let db = require('./utils.js').db;
 //Error codes returned on failure
 const error = require('./error_codes.js');
 
+//FCM Module
+const fcm = require('./firebase_services.js').fcm_functions;
+
 /**
  * Standardized requests: select members based on some constraints. Results are stripped down and returned to caller.
  * @throws DB_ERROR if query is not valid
@@ -77,6 +80,22 @@ function _executeConnectionRequest(token, query) {
     });
 }
 
+function notifyConnectionRequest(senderId, recipientId) {
+    // get recipient token and sender's screen name
+    let senderName;
+    
+    return _getDisplayNameFromId(senderId)
+        .then(sender => {
+            senderName = sender['username'];
+            return _getTokenFromId(recipientId);
+        }).then(recipient => {
+            fcm.notifyConnectionRequest(recipient['token'], senderName);
+        }).catch(err => {
+            console.dir({message: "Failed to send notification request!", error: err});
+        })
+}
+
+
 // helpers
 function _getIdFromToken(token) {
     return db.one("SELECT memberid FROM FCM_Token WHERE token=$1", [token])
@@ -91,6 +110,17 @@ function _getIdFromToken(token) {
             }
         });
 }
+
+function _getTokenFromId(memberid) {
+    return db.one("SELECT token FROM FCM_Token WHERE memberid=$1", [memberid])
+        .catch(err => _handleDbError(err));
+}
+
+function _getDisplayNameFromId(memberid) {
+    return db.one("SELECT username FROM Members WHERE memberid=$1", [memberid])
+        .catch(err => _handleDbError(err));        
+}
+
 
 function _executeQuery(query, params) {
     return db.any(query, params)
@@ -119,5 +149,6 @@ function _handleMissingInputError() {
 
 // any function included in exports will be public
 module.exports = {
-    getAllConnections, getActiveConnections, getPendingConnections, getReceivedConnections, _getIdFromToken
+    getAllConnections, getActiveConnections, getPendingConnections, getReceivedConnections, _getIdFromToken,
+    notifyConnectionRequest
 }
