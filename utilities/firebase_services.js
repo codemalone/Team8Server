@@ -61,7 +61,19 @@ function sendToIndividual(token, msg, from) {
     "token": token
     };
 
-//console.log(message);
+    //console.log(message);
+
+    // Send a message to the device corresponding to the provided
+    // registration token.
+    admin.messaging().send(message)
+        .then((response) => {
+            // Response is a message ID string.
+            console.log('Successfully sent message:', response);
+        })
+        .catch((error) => {
+            console.log('Error sending message:', error);
+        });
+}
 
 function notifyConnectionRequest(token, sender) {
     //build the message for FCM to send
@@ -82,19 +94,16 @@ function notifyConnectionRequest(token, sender) {
     "token": token
     };
 
-}
-
-
-// Send a message to the device corresponding to the provided
-// registration token.
-admin.messaging().send(message)
-    .then((response) => {
-        // Response is a message ID string.
-        console.log('Successfully sent message:', response);
-    })
-    .catch((error) => {
-        console.log('Error sending message:', error);
-    });
+    // Send a message to the device corresponding to the provided
+    // registration token.
+    admin.messaging().send(message)
+        .then((response) => {
+            // Response is a message ID string.
+            console.log('Successfully sent message:', response);
+        })
+        .catch((error) => {
+            console.log('Error sending message:', error);
+        });
 }
 
 let fcm_functions = { sendToTopic, sendToIndividual, notifyConnectionRequest };
