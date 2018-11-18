@@ -50,7 +50,7 @@ function sendToIndividual(token, msg, from) {
                 title: 'New Message from '.concat(from),
                 body: msg,
                 color: "#0000FF",
-                icon: '@drawable/ic_notification_overlay',
+                icon: '@mipmap/ic_launcher_8ball',
                 click_action: "OPEN_CHAT"
             },
         data: {
@@ -84,7 +84,7 @@ function notifyConnectionRequest(token, sender) {
                 title: 'New Connection Request',
                 body: sender.concat(' has added you as a Connection.'),
                 color: "#0000FF",
-                icon: '@drawable/ic_notification_overlay',
+                icon: '@mipmap/ic_launcher_8ball',
                 click_action: "OPEN_CONNECTIONS"
             },
         data: {
