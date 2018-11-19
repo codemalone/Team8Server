@@ -23,7 +23,6 @@ router.post('/get', (req, res) => {
     .catch(err => res.send({ success: false, error: err}));
 });
 
-
 router.post('/get/active', (req, res) => {
     let token = req.body['token'];
     db.one("SELECT memberid FROM fcm_token WHERE token=$1", token)
