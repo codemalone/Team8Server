@@ -80,6 +80,13 @@ function notifyConnectionRequest(token, sender) {
     //build the message for FCM to send
     var message = {
         android: {
+            notification: {
+                title: 'New Connection Request',
+                body: sender.concat(' has added you as a Connection.'),
+                color: "#0000FF",
+                icon: '@mipmap/ic_launcher_8ball',
+                click_action: "OPEN_CONNECTIONS"
+            },
         data: {
             "type": "newcontact",
             "sender": sender,
