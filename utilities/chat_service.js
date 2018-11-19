@@ -189,7 +189,7 @@ function _sendChatMessage(senderName, chatId, message) {
     return db.manyOrNone('SELECT token FROM FCM_Token NATURAL JOIN ChatMembers WHERE chatid=$1', [chatId])
         .then(rows => {
             rows.forEach(element => {
-                fcm_functions.sendToIndividual(element['token'], message, senderName);
+                fcm_functions.sendToIndividual(element['token'], message, senderName, chatId);
             });
         })
         .catch(err => _handleDbError(err));

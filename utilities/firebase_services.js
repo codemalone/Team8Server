@@ -42,7 +42,7 @@ function sendToTopic(msg, from, topic) {
 }
 
 //use to send message to a specific client by the token
-function sendToIndividual(token, msg, from) {
+function sendToIndividual(token, msg, from, chatId) {
     //build the message for FCM to send
     var message = {
         android: {
@@ -56,6 +56,7 @@ function sendToIndividual(token, msg, from) {
             "type": "contacrt",
             "sender": from,
             "message": msg,
+            "chatId": chatId
         }
     },
     "token": token
