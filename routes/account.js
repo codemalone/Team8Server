@@ -17,8 +17,9 @@ router.use(bodyParser.json());
 router.post('/login/email', (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
+    let token = req.body.token;
 
-    account.loginUserOnEmail(email, password)
+    account.loginUserOnEmail(email, password, token)
         .then(user => { res.send({ success: true, user: user }) })
         .catch(err => { res.send({ success: false, message: err }) })
 });
@@ -29,8 +30,9 @@ router.post('/login/email', (req, res) => {
 router.post('/login/username', (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
+    let token = req.body.token;
 
-    account.loginUserOnUsername(username, password)
+    account.loginUserOnUsername(username, password, token)
         .then(user => { res.send({ success: true, user: user }) })
         .catch(err => { res.send({ success: false, message: err }) })
 });

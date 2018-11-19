@@ -26,21 +26,31 @@ const ACCOUNT_RECOVERY_CODE_EXPIRATION = 60; // minutes
  * @throws {INVALID_CREDENTIALS} email or password not valid
  * @throws {USER_NOT_VERIFIED} email has not been verified
  */
-function loginUserOnEmail(email, theirPw) {
-     if (email && theirPw) {
-        return _getUserOnEmailNoPassword(email)
-            .then(user => {
-                if (!(user && _isPassword(user, theirPw))) {
-                    _handleAccountError(error.INVALID_CREDENTIALS);
-                } else if (user.verification == 0) {
-                    _handleAccountError(error.USER_NOT_VERIFIED);
-                } else {
-                    return _stripUser(user);
-                }
-            });
-    } else {
+function loginUserOnEmail(email, theirPw, token) {
+    if (!(email && theirPw)) {
         return _handleMissingInputError();
     }
+
+    let storedUser;
+
+    return _getUserOnEmailNoPassword(email)
+        .then(user => {
+            if (!(user && _isPassword(user, theirPw))) {
+                _handleAccountError(error.INVALID_CREDENTIALS);
+            } else if (user.verification == 0) {
+                _handleAccountError(error.USER_NOT_VERIFIED);
+            } 
+            
+            storedUser = user;
+                        
+            if (token) {
+                return _setSessionToken(user.memberid, token);
+            } else {
+                return Promise.resolve();
+            }
+        }).then(() => {
+            return _stripUser(storedUser);
+        });        
 }
 
 /**
@@ -52,22 +62,29 @@ function loginUserOnEmail(email, theirPw) {
  * @throws {INVALID_CREDENTIALS} email or password not valid
  * @throws {USER_NOT_VERIFIED} email has not been verified
  */
-function loginUserOnUsername(username, theirPw) {
-    //parameters must not be null
-    if (username && theirPw) {
-        return _getUserOnUsernameNoPassword(username)
-            .then(user => {
-                if (!(user && _isPassword(user, theirPw))) {
-                    _handleAccountError(error.INVALID_CREDENTIALS);
-                } else if (user.verification == 0) {
-                    _handleAccountError(error.USER_NOT_VERIFIED);
-                } else {
-                    return _stripUser(user);
-                }
-            });
-    } else {
+function loginUserOnUsername(username, theirPw, token) {
+    if (!(username && theirPw)) {
         return _handleMissingInputError();
     }
+
+    return _getUserOnUsernameNoPassword(username)
+        .then(user => {
+            if (!(user && _isPassword(user, theirPw))) {
+                _handleAccountError(error.INVALID_CREDENTIALS);
+            } else if (user.verification == 0) {
+                _handleAccountError(error.USER_NOT_VERIFIED);
+            } 
+            
+            storedUser = user;
+                        
+            if (token) {
+                return _setSessionToken(user.memberid, token);
+            } else {
+                return Promise.resolve();
+            }
+        }).then(() => {
+            return _stripUser(storedUser);
+        });    
 }
 
 /**
@@ -438,6 +455,12 @@ function _setUsername(memberid, newUsername) {
                 _handleDbError(err);
             }
         })
+}
+
+function _setSessionToken(memberid, token) {
+    return db.manyOrNone("INSERT INTO FCM_Token (memberId, token) VALUES ($1, $2) " +
+            "ON CONFLICT (memberId) DO UPDATE SET token=$2;", [memberid, token])
+        .catch(err => _handleDbError(err));
 }
 
 function _setUserPassword(memberid, newPassword) {

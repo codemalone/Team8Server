@@ -26,7 +26,9 @@ app.use(express.static(path.join(__dirname, 'public')));
  */
 app.use('/account', require('./routes/account.js'));
 app.use('/weather', require('./routes/weather.js'));
-
+app.use('/connections', require('./routes/connections.js'));
+app.use('/chats', require('./routes/chats.js'));
+app.use('/hello', require('./routes/hello.js'));
 
 // Index page is not used
 app.get('/', function(req, res) {

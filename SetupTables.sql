@@ -70,3 +70,9 @@ CREATE TABLE resetcodes (code VARCHAR(255) PRIMARY KEY,
                          TimeStamp TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
                          FOREIGN KEY(memberid) REFERENCES Members(MemberID)
 );
+
+DROP TABLE IF EXISTS FCM_Token;
+CREATE TABLE FCM_Token (KeyID SERIAL PRIMARY KEY, 
+                        MemberID INT NOT NULL UNIQUE, 
+                        Token VARCHAR(255), 
+                        FOREIGN KEY(MemberID) REFERENCES Members(MemberID));
