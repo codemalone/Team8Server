@@ -274,13 +274,17 @@ function _addAllUsers(chat) {
 }
 
 function _addRecentMessage(chat) {
-    let msgQuery = `SELECT * FROM Messages WHERE timestamp=(
-        SELECT MAX(timestamp) FROM messages WHERE chatid=$1
-       )`
+    let msgQuery = `SELECT Messages.message
+                    FROM Messages 
+                    WHERE timestamp=(
+                      SELECT MAX(timestamp) FROM messages WHERE chatid=$1
+                    )`
 
     return db.oneOrNone(msgQuery, [chat.chatid])
         .then(msg => {
-            chat.recentMessage = msg;
+            if (msg) {
+                chat.recentMessage = msg.message;
+            }
         })
         .catch(err => _handleDbError(err));
 }
