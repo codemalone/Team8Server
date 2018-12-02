@@ -27,6 +27,11 @@ function getActiveConnections(token) {
     return _executeConnectionRequest(token, query);
 }
 
+function getActiveConnectionsInChat(token, chatId) {
+    
+}
+
+
 function getPendingConnections(token) {
     let query = `SELECT * FROM Members INNER JOIN Contacts ON Members.memberid=Contacts.memberid_b WHERE memberid_a=$1 AND verified=0`
     return _executeConnectionRequest(token, query);

@@ -7,6 +7,31 @@ let fcm_functions = require('../utilities/utils').fcm_functions;
 //Error codes returned on failure
 const error = require('./error_codes.js');
 
+function addUserToConversation(token, theirEmail, chatId) {
+    if(!(token && theirEmail && chatId)) {
+        return _handleMissingInputError();
+    }
+
+    let thisUser;
+    let theirMemberId;
+    
+    return _getUserOnToken(token)
+        .then(user => {
+            thisUser = user;
+            // check if the other user has a connection to the caller
+            return _getConnectionId(thisUser.memberid, theirEmail);
+        }).then(connection => {
+            theirMemberId = connection.memberid;
+            // check if this user is part of the specified chat
+            return _isUserInChat(thisUser.memberid, chatId)
+        }).then(result => {
+            if (result) {
+                _inviteUserToChat(theirMemberId, thisUser.username, chatId);
+            } else {
+                _handleSessionError(error.INVALID_CHATID);
+            }
+        })
+}
 
 function addConversation(token, theirEmail) {
     if(!(token && theirEmail)) {
@@ -97,6 +122,18 @@ function _stripUser(theUser) {
     }
 }
 
+// add user to conversation and then send notification
+function _inviteUserToChat(theirId, senderName, chatId) {
+    let insert = `INSERT INTO chatmembers(memberid, chatid) VALUES ($1,$2)`
+
+    return db.none(insert, [theirId, chatId])
+        .then(() => {
+            return db.oneOrNone('SELECT * FROM FCM_Token WHERE memberid=$1', [theirId])
+        }).then(rows => {
+                fcm_functions.notifyChatRequest(rows['token'], senderName, chatId);
+        }).catch(err => _handleDbError(err));
+}
+
 
 // Database queries
 function _getUserOnToken(token) {
@@ -140,6 +177,20 @@ function _getConnectionId(myId, theirEmail) {
             }
         });
 }
+
+function _isUserInChat(myId, chatId) {
+    let query = `select * FROM chatmembers WHERE memberid=$1 and chatid=$2`
+
+    return db.oneOrNone(query, [myId, chatId])
+        .then(row => {
+            if (row) {
+                return true;
+            } else {
+                return false;
+            }
+        }).catch(err => _handleDbError(err));
+}
+
 
 function _getChatId(myId, theirId) {
     let query = `select TblA.chatid FROM chatmembers AS TblA INNER JOIN chatmembers AS TblB ON TblA.chatid=TblB.chatid
@@ -223,5 +274,5 @@ function _handleMissingInputError() {
 
 // any function included in exports will be public
 module.exports = {
-    getAllMessages, sendMessage, addConversation
+    getAllMessages, sendMessage, addConversation, addUserToConversation
 }

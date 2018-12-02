@@ -22,11 +22,18 @@ router.use(bodyParser.json());
 router.post('/add', (req, res) => {
     let token = req.body.token;
     let theirEmail = req.body.theirEmail;
+    let chatId = req.body.chatId;
 
-    chat.addConversation(token, theirEmail)
-        .then(data => { res.send({ success: true, data: data }) })
+    let action;
+
+    if (chatId) {
+        action = chat.addUserToConversation(token, theirEmail, chatId);
+    } else {
+        action = chat.addConversation(token, theirEmail);
+    }
+
+    action.then(data => { res.send({ success: true, data: data }) })
         .catch(err => { res.send({ success: false, message: err }) })
-
 })
 
 /**

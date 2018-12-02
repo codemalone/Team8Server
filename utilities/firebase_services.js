@@ -31,14 +31,7 @@ function sendToTopic(msg, from, topic) {
 
     // Send a message to the device corresponding to the provided
     // registration token.
-    admin.messaging().send(message)
-        .then((response) => {
-            // Response is a message ID string.
-            console.log('Successfully sent message:', response);
-        })
-        .catch((error) => {
-            console.log('Error sending message:', error);
-        });
+    sendMessage(message);
 }
 
 //use to send message to a specific client by the token
@@ -63,18 +56,7 @@ function sendToIndividual(token, msg, from, chatId) {
     "token": token
     };
 
-    //console.log(message);
-
-    // Send a message to the device corresponding to the provided
-    // registration token.
-    admin.messaging().send(message)
-        .then((response) => {
-            // Response is a message ID string.
-            console.log('Successfully sent message:', response);
-        })
-        .catch((error) => {
-            console.log('Error sending message:', error);
-        });
+    sendMessage(message);
 }
 
 function notifyConnectionRequest(token, sender) {
@@ -97,19 +79,47 @@ function notifyConnectionRequest(token, sender) {
     "token": token
     };
 
-    // Send a message to the device corresponding to the provided
-    // registration token.
-    admin.messaging().send(message)
-        .then((response) => {
-            // Response is a message ID string.
-            console.log('Successfully sent message:', response);
-        })
-        .catch((error) => {
-            console.log('Error sending message:', error);
-        });
+    sendMessage(message);
 }
 
-let fcm_functions = { sendToTopic, sendToIndividual, notifyConnectionRequest };
+function notifyChatRequest(token, sender, chatId) {
+    //build the message for FCM to send
+    var message = {
+        android: {
+            notification: {
+                title: 'New Chat Request',
+                body: sender.concat(' has invited you to chat.'),
+                color: "#0000FF",
+                icon: '@mipmap/ic_launcher_8ball',
+                click_action: ""
+            },
+        data: {
+            "type": "newchat",
+            "sender": sender,
+            "message": sender.concat(' has invited you to chat.'),
+            "chatId": chatId
+        }
+    },
+    "token": token
+    };
+
+    sendMessage(message);    
+}
+
+// Send a message to the device corresponding to the provided
+// registration token.
+function sendMessage(message) {
+    admin.messaging().send(message)
+    .then((response) => {
+        // Response is a message ID string.
+        console.log('Successfully sent message:', response);
+    })
+    .catch((error) => {
+        console.log('Error sending message:', error);
+    });
+}
+
+let fcm_functions = { sendToTopic, sendToIndividual, notifyConnectionRequest, notifyChatRequest };
 
 module.exports = {
     admin, fcm_functions
