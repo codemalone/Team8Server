@@ -7,9 +7,8 @@ const bodyParser = require("body-parser");
 // provides resource to verify and manage a member account
 const chat = require('../utilities/chat_service');
 
-// for now we can put the fcm module here
-
-let db = require('../utilities/utils').db;
+// provides resource to get all connections that could be added to a chat
+const possibleConnections = require('../utilities/connections_service').getActiveConnectionsNotInChat;
 
 // create the router
 var router = express.Router();
@@ -33,6 +32,23 @@ router.post('/add', (req, res) => {
     }
 
     action.then(data => { res.send({ success: true, data: data }) })
+        .catch(err => { res.send({ success: false, message: err }) })
+})
+
+router.post('/users/possible', (req, res) => {
+    let token = req.body.token;
+    let chatId = req.body.chatId;
+
+    possibleConnections(token, chatId)
+        .then(data => { res.send({ success: true, data: data }) })
+        .catch(err => { res.send({ success: false, message: err }) })
+})
+
+router.post('/details', (req, res) => {
+    let token = req.body.token;
+
+    chat.getAllChatDetails(token)
+        .then(data => { res.send({ success: true, data: data }) })
         .catch(err => { res.send({ success: false, message: err }) })
 })
 

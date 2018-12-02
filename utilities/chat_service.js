@@ -108,6 +108,37 @@ function sendMessage(token, chatId, message) {
         }).then(() => _sendChatMessage(user.username, chatId, message));
 }
 
+/**
+ * Returns details for all chats that the user belongs to.
+ * @param {String} token 
+ */
+function getAllChatDetails(token) {
+    let result = new Array();
+
+    return _getUserOnToken(token)
+        .then(user => {
+            return _getAllChats(user.memberid)
+        }).then(chats => {
+            result = chats;
+            let promises = new Array();
+            
+            result.forEach(element => {
+                promises.push(_addAllUsers(element));
+            })
+            return Promise.all(promises);
+        }).then(() => {
+            let promises = new Array();
+
+            result.forEach(element => {
+                promises.push(_addRecentMessage(element));
+            })
+            return Promise.all(promises);
+        }).then(() => {
+            // the finished object array is returned
+            return result;
+        })
+}
+
 // Helper functions for synchronous repeated work
 
 /**
@@ -218,6 +249,41 @@ function _createNewChat(myId, theirId) {
     });
 }
 
+function _getAllChats(memberId) {
+    let chatQuery = `SELECT chatid FROM Chatmembers WHERE memberid=$1`
+    
+    return db.manyOrNone(chatQuery, [memberId])
+        .catch(err => _handleDbError(err));
+}
+
+function _addAllUsers(chat) {
+    let userQuery = `SELECT username FROM Members NATURAL JOIN Chatmembers WHERE chatid=$1`
+
+    let usernames = new Array();
+
+    return db.manyOrNone(userQuery, [chat.chatid])
+        .then(users => {
+            if (users) {
+                users.forEach(element => {
+                    usernames.push(element.username);
+                });
+                chat.users = usernames;
+            }
+        })
+        .catch(err => _handleDbError(err));
+}
+
+function _addRecentMessage(chat) {
+    let msgQuery = `SELECT * FROM Messages WHERE timestamp=(
+        SELECT MAX(timestamp) FROM messages WHERE chatid=$1
+       )`
+
+    return db.oneOrNone(msgQuery, [chat.chatid])
+        .then(msg => {
+            chat.recentMessage = msg;
+        })
+        .catch(err => _handleDbError(err));
+}
 
 function _addMessage(chatId, message, memberId) {
     let insert = 'INSERT INTO Messages(ChatId, Message, MemberId) VALUES($1, $2, $3)';
@@ -274,5 +340,6 @@ function _handleMissingInputError() {
 
 // any function included in exports will be public
 module.exports = {
-    getAllMessages, sendMessage, addConversation, addUserToConversation
+    getAllMessages, sendMessage, addConversation, addUserToConversation,
+    getAllChatDetails
 }

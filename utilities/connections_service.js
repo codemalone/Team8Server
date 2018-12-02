@@ -9,6 +9,8 @@ const fcm = require('./firebase_services.js').fcm_functions;
 
 /**
  * Standardized requests: select members based on some constraints. Results are stripped down and returned to caller.
+ * Additional parameters can be passed as an array. Note that the first query variable is reserved for the caller's
+ * memberid. Additional query parameters must be referenced begin with '$2'.
  * @throws DB_ERROR if query is not valid
  * @throws INVALID_TOKEN if a caller is not authenticated
  */
@@ -27,10 +29,16 @@ function getActiveConnections(token) {
     return _executeConnectionRequest(token, query);
 }
 
-function getActiveConnectionsInChat(token, chatId) {
-    
+function getActiveConnectionsNotInChat(token, chatId) {
+    let query = `SELECT * FROM
+                 (  
+                  (SELECT Members.* FROM Members INNER JOIN Contacts ON Members.memberid=Contacts.memberid_b WHERE memberid_a=$1 AND verified=1)
+                  UNION
+                  (SELECT Members.* FROM Members INNER JOIN Contacts ON Members.memberid=Contacts.memberid_a WHERE memberid_b=$1 AND verified=1)
+                 ) AS Connections
+                 WHERE Connections.memberid NOT IN (SELECT memberid FROM Chatmembers WHERE chatid=$2)`
+    return _executeConnectionRequest(token, query, [chatId]);
 }
-
 
 function getPendingConnections(token) {
     let query = `SELECT * FROM Members INNER JOIN Contacts ON Members.memberid=Contacts.memberid_b WHERE memberid_a=$1 AND verified=0`
@@ -48,7 +56,6 @@ function getReceivedConnections(token) {
 function _packageUsers(rows) {
     let data = new Array();
 
-    console.dir(rows);
     rows.forEach(element => {
         data.push({
 
@@ -72,14 +79,14 @@ function _packageUsers(rows) {
  * @param {string} token valid token will link to a registered user
  * @param {string} query standardized request for users
  */
-function _executeConnectionRequest(token, query) {
+function _executeConnectionRequest(token, query, params) {
     if (!(token && query)) {
         _handleMissingInputError();
     }
         
     return _getIdFromToken(token)
     .then(id => {
-        return _executeQuery(query, [id]);
+        return _executeQuery(query, [id].concat(params));
     }).then(rows => {
         return _packageUsers(rows);
     });
@@ -155,5 +162,5 @@ function _handleMissingInputError() {
 // any function included in exports will be public
 module.exports = {
     getAllConnections, getActiveConnections, getPendingConnections, getReceivedConnections, _getIdFromToken,
-    notifyConnectionRequest
+    notifyConnectionRequest, getActiveConnectionsNotInChat
 }
