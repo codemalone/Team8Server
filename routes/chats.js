@@ -58,7 +58,7 @@ router.post('/users/remove', (req, res) => {
     let chatId = req.body.chatId;
 
     chat.leaveChat(token, chatId)
-        .then(data => { res.send({ success: true, data: data }) })
+        .then(() => { res.send({ success: true }) })
         .catch(err => { res.send({ success: false, message: err }) })
 })
 

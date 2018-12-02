@@ -10,4 +10,4 @@ exports.INVALID_VERIFICATION_CODE = {code: 209, message: "The verification code 
 exports.USER_IS_VERIFIED = {code: 210, message: "The email is already verified."};
 exports.INVALID_TOKEN = {code: 301, message: "The token is invalid or has expired."};
 exports.INVALID_CONNECTION = {code: 302, message: "The specified user is not a connection."}
-exports.INVALID_CHATID = {code: 303, message: "This user does not belong to the specified chat."}
+exports.INVALID_CHATID = {code: 303, message: "This user already belongs to the specified chat."}

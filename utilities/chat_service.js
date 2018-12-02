@@ -22,13 +22,14 @@ function addUserToConversation(token, theirEmail, chatId) {
             return _getConnectionId(thisUser.memberid, theirEmail);
         }).then(connection => {
             theirMemberId = connection.memberid;
-            // check if this user is part of the specified chat
+            // check if the caller is part of the specified chat
             return _isUserInChat(thisUser.memberid, chatId)
         }).then(result => {
             if (result) {
                 _inviteUserToChat(theirMemberId, thisUser.username, chatId);
             } else {
                 _handleSessionError(error.INVALID_CHATID);
+                
             }
         })
 }
@@ -251,7 +252,7 @@ function _removeFromChat(myId, chatId) {
     let query = `DELETE FROM Chatmembers WHERE memberid=$1 and chatid=$2`
 
     return db.none(query, [myId, chatId])
-        .chat(err => _handleDbError(err));
+        .catch(err => _handleDbError(err));
 }
 
 function _getChatId(myId, theirId) {
