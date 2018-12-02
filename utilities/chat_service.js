@@ -93,12 +93,37 @@ function getAllMessages(token, chatId) {
         })
 }       
 
+function getAllMembers(token, chatid) {
+    if (!(token && chatid)) {
+        return _handleMissingInputError();
+    }
+
+    let result = { chatid };
+
+    return _getUserOnToken(token)
+        .then(() => {
+            return _addAllUsers(result);
+        }).then(() => {
+            return result;
+        })    
+}
+
+function leaveChat(token, chatid) {
+    if (!(token && chatid)) {
+        return _handleMissingInputError();
+    }
+
+    return _getUserOnToken(token)
+        .then(user => {
+            return _removeFromChat(user.memberid, chatid);
+        })    
+}
+
 function sendMessage(token, chatId, message) {
     if (!(chatId && message && token)) {
         // token not required yet because we are not passing it from app
         return _handleMissingInputError();
     }
-
     
     // get user on email because that's all we have
     return _getUserOnToken(token)
@@ -123,24 +148,25 @@ function getAllChatDetails(token) {
             let promises = new Array();
             
             result.forEach(element => {
+                // add an array of all users belonging to the chat
                 promises.push(_addAllUsers(element));
             })
             return Promise.all(promises);
         }).then(() => {
             let promises = new Array();
-
+            
             result.forEach(element => {
+                // add the most recent message for the chat
                 promises.push(_addRecentMessage(element));
             })
             return Promise.all(promises);
         }).then(() => {
-            // the finished object array is returned
+            // the finished chat object array is returned
             return result;
         })
 }
 
 // Helper functions for synchronous repeated work
-
 /**
  * returns a user object without any sensitive information
  */ 
@@ -164,7 +190,6 @@ function _inviteUserToChat(theirId, senderName, chatId) {
                 fcm_functions.notifyChatRequest(rows['token'], senderName, chatId);
         }).catch(err => _handleDbError(err));
 }
-
 
 // Database queries
 function _getUserOnToken(token) {
@@ -222,6 +247,12 @@ function _isUserInChat(myId, chatId) {
         }).catch(err => _handleDbError(err));
 }
 
+function _removeFromChat(myId, chatId) {
+    let query = `DELETE FROM Chatmembers WHERE memberid=$1 and chatid=$2`
+
+    return db.none(query, [myId, chatId])
+        .chat(err => _handleDbError(err));
+}
 
 function _getChatId(myId, theirId) {
     let query = `select TblA.chatid FROM chatmembers AS TblA INNER JOIN chatmembers AS TblB ON TblA.chatid=TblB.chatid
@@ -270,6 +301,13 @@ function _addAllUsers(chat) {
                 chat.users = usernames;
             }
         })
+        .catch(err => _handleDbError(err));
+}
+
+function _removeUser(memberId, chatId) {
+    let query = `DELETE FROM chatmembers WHERE memberid=$1 AND chatid=$2`
+
+    return db.none(query, [memberId, chatId])
         .catch(err => _handleDbError(err));
 }
 
@@ -345,5 +383,5 @@ function _handleMissingInputError() {
 // any function included in exports will be public
 module.exports = {
     getAllMessages, sendMessage, addConversation, addUserToConversation,
-    getAllChatDetails
+    getAllChatDetails, getAllMembers, leaveChat
 }

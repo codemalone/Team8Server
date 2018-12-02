@@ -44,6 +44,24 @@ router.post('/users/possible', (req, res) => {
         .catch(err => { res.send({ success: false, message: err }) })
 })
 
+router.post('/users/current', (req, res) => {
+    let token = req.body.token;
+    let chatId = req.body.chatId;
+
+    chat.getAllMembers(token, chatId)
+        .then(data => { res.send({ success: true, data: data }) })
+        .catch(err => { res.send({ success: false, message: err }) })
+})
+
+router.post('/users/remove', (req, res) => {
+    let token = req.body.token;
+    let chatId = req.body.chatId;
+
+    chat.leaveChat(token, chatId)
+        .then(data => { res.send({ success: true, data: data }) })
+        .catch(err => { res.send({ success: false, message: err }) })
+})
+
 router.post('/details', (req, res) => {
     let token = req.body.token;
 
