@@ -317,15 +317,15 @@ function _addRecentMessage(chat, user) {
     return db.oneOrNone(msgQuery, [chat.chatid])
         .then(msg => {
             if (msg) {
-                let displayName;
+                let displayName = "";
 
                 if (msg.username == user.username) {
-                    displayname = "You: ";
-                } else if (chat.users.length > 1) {
-                    displayname = msg.username + ": ";
+                    displayName = "You: ";
+                } else if (chat.users.length > 2) {
+                    displayName = msg.username + ": ";
                 }
                                 
-                chat.recentMessage = displayname + msg.message;
+                chat.recentMessage = displayName + msg.message;
             }
         })
         .catch(err => _handleDbError(err));
@@ -355,12 +355,6 @@ function _sendChatMessage(senderName, chatId, message) {
                 fcm_functions.sendToIndividual(element['token'], message, senderName, chatId);
             });
         })
-        .catch(err => _handleDbError(err));
-}
-
-// take this out after token passing is implemented in app
-function _getUserOnEmailNoPassword(email) {
-    return db.oneOrNone('SELECT * FROM Members WHERE Email=$1', [email])
         .catch(err => _handleDbError(err));
 }
 
