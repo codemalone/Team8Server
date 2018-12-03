@@ -177,11 +177,10 @@ router.post("/password/change", (req, res) => {
  * Changes a username given the valid account password.
  */
 router.post("/username/change", (req, res) => {
-    let email = req.body.email;
-    let password = req.body.password;
+    let token = req.body.token;
     let newUsername = req.body.newUsername;
 
-    account.changeUsername(email, password, newUsername)
+    account.changeUsername(token, newUsername)
     .then(() => { res.send({ success: true }) })
     .catch(err => { res.send({ success: false, message: err }) })
 });

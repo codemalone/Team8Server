@@ -314,17 +314,13 @@ function isRecoveryCodeValid(email, code) {
         });
 }
 
-function changeUsername(email, password, newUsername) {
-    if (!(email && password && newUsername)) {
+function changeUsername(token, newUsername) {
+    if (!(token && newUsername)) {
         return _handleMissingInputError(error.MISSING_PARAMETERS);
     }
 
-    return _getUserOnEmailNoPassword(email)
+    return _getUserOnToken(token)
         .then(user => {
-            if (!(user && _isPassword(user, password))) {
-                _handleAccountError(error.INVALID_CREDENTIALS);
-            }
-
             if (user.username == newUsername) {
                 _handleAccountError(error.USERNAME_ALREADY_EXISTS);
             } else {
@@ -412,6 +408,20 @@ function _getUserOnEmailNoPassword(email) {
 function _getUserOnUsernameNoPassword(username) {
     return db.oneOrNone('SELECT * FROM Members WHERE Username=$1', [username])
         .catch(err => _handleDbError(err));
+}
+
+function _getUserOnToken(token) {
+    return db.one("SELECT Members.* FROM Members NATURAL JOIN FCM_Token WHERE token=$1", [token])
+        .then(data => {
+            return data;
+        })
+        .catch(err => {
+            if (err.code == 0) {
+                _handleSessionError(error.INVALID_TOKEN);
+            } else {
+                _handleDbError(err);
+            }
+        });
 }
 
 function  _getUserAndResetCode(email) {
