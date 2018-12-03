@@ -140,9 +140,11 @@ function sendMessage(token, chatId, message) {
  */
 function getAllChatDetails(token) {
     let result = new Array();
+    let user;
 
     return _getUserOnToken(token)
-        .then(user => {
+        .then(data => {
+            user = data;
             return _getAllChats(user.memberid)
         }).then(chats => {
             result = chats;
@@ -158,7 +160,7 @@ function getAllChatDetails(token) {
             
             result.forEach(element => {
                 // add the most recent message for the chat
-                promises.push(_addRecentMessage(element));
+                promises.push(_addRecentMessage(element, user));
             })
             return Promise.all(promises);
         }).then(() => {
@@ -305,16 +307,9 @@ function _addAllUsers(chat) {
         .catch(err => _handleDbError(err));
 }
 
-function _removeUser(memberId, chatId) {
-    let query = `DELETE FROM chatmembers WHERE memberid=$1 AND chatid=$2`
-
-    return db.none(query, [memberId, chatId])
-        .catch(err => _handleDbError(err));
-}
-
-function _addRecentMessage(chat) {
-    let msgQuery = `SELECT Messages.message
-                    FROM Messages 
+function _addRecentMessage(chat, user) {
+    let msgQuery = `SELECT Messages.*, Members.username
+                    FROM Messages NATURAL JOIN Members
                     WHERE timestamp=(
                       SELECT MAX(timestamp) FROM messages WHERE chatid=$1
                     )`
@@ -322,7 +317,15 @@ function _addRecentMessage(chat) {
     return db.oneOrNone(msgQuery, [chat.chatid])
         .then(msg => {
             if (msg) {
-                chat.recentMessage = msg.message;
+                let displayName;
+
+                if (msg.username == user.username) {
+                    displayname = "You: ";
+                } else if (chat.users.length > 1) {
+                    displayname = msg.username + ": ";
+                }
+                                
+                chat.recentMessage = displayname + msg.message;
             }
         })
         .catch(err => _handleDbError(err));
