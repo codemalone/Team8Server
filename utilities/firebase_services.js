@@ -47,7 +47,7 @@ function sendToIndividual(token, msg, from, chatId) {
                 click_action: "NOTIFICATION_EVENT"
             },
         data: {
-            "type": "contacrt",
+            "type": "new_message",
             "sender": from,
             "message": msg,
             "chatId": chatId
@@ -71,7 +71,7 @@ function notifyConnectionRequest(token, sender) {
                 click_action: "OPEN_CONNECTIONS"
             },
         data: {
-            "type": "newcontact",
+            "type": "new_contact_request",
             "sender": sender,
             "message": sender.concat(' has added you as a Connection.')
         }
