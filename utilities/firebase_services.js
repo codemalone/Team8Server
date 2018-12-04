@@ -44,7 +44,7 @@ function sendToIndividual(token, msg, from, chatId) {
                 body: msg,
                 color: "#0000FF",
                 icon: '@mipmap/ic_launcher_8ball',
-                click_action: "OPEN_CHAT"
+                click_action: "NOTIFICATION_EVENT"
             },
         data: {
             "type": "contacrt",
@@ -91,7 +91,7 @@ function notifyChatRequest(token, sender, chatId) {
                 body: sender.concat(' has invited you to chat.'),
                 color: "#0000FF",
                 icon: '@mipmap/ic_launcher_8ball',
-                click_action: ""
+                click_action: "NOTIFICATION_EVENT"
             },
         data: {
             "type": "newchat",
