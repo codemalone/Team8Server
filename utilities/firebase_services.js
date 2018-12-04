@@ -35,17 +35,10 @@ function sendToTopic(msg, from, topic) {
 }
 
 //use to send message to a specific client by the token
-function sendToIndividual(token, msg, from, chatId) {
+function sendToIndividual(token, msg, from, chatId, sendNotification) {
     //build the message for FCM to send
     var message = {
         android: {
-            notification: {
-                title: 'New Message from '.concat(from),
-                body: msg,
-                color: "#0000FF",
-                icon: '@mipmap/ic_launcher_8ball',
-                click_action: "NOTIFICATION_EVENT"
-            },
         data: {
             "type": "new_message",
             "sender": from,
@@ -55,6 +48,16 @@ function sendToIndividual(token, msg, from, chatId) {
     },
     "token": token
     };
+
+    if (sendNotification) {
+        message.android.notification = {
+            title: 'New Message from '.concat(from),
+                body: msg,
+                color: "#0000FF",
+                icon: '@mipmap/ic_launcher_8ball',
+                click_action: "NOTIFICATION_EVENT"
+        }
+    }
 
     sendMessage(message);
 }

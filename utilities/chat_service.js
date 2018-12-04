@@ -131,7 +131,7 @@ function sendMessage(token, chatId, message) {
         .then(data => {
             user = data;
             return _addMessage(chatId, message, user.memberid);
-        }).then(() => _sendChatMessage(user.username, chatId, message));
+        }).then(() => _sendChatMessage(user.username, user.memberid, chatId, message));
 }
 
 /**
@@ -348,11 +348,11 @@ function _sendGlobalMessage(senderEmail, message) {
         .catch(err => _handleDbError(err));
 }
 
-function _sendChatMessage(senderName, chatId, message) {
-    return db.manyOrNone('SELECT token FROM FCM_Token NATURAL JOIN ChatMembers WHERE chatid=$1', [chatId])
+function _sendChatMessage(senderName, senderId, chatId, message) {
+    return db.manyOrNone('SELECT token, memberid FROM FCM_Token NATURAL JOIN ChatMembers WHERE chatid=$1', [chatId])
         .then(rows => {
             rows.forEach(element => {
-                fcm_functions.sendToIndividual(element['token'], message, senderName, chatId);
+                fcm_functions.sendToIndividual(element['token'], message, senderName, chatId, element['memberid'] != senderId);
             });
         })
         .catch(err => _handleDbError(err));
