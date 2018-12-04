@@ -52,7 +52,8 @@ function addConversation(token, theirEmail) {
         }).then(connection => {
             theirMemberId = connection.memberid;
             // check if the two users have an active chat
-            return _getChatId(myMemberId, theirMemberId)
+            // return _getChatId(myMemberId, theirMemberId)
+            return false;
         }).then(chat => {
             if (chat) {
                 result.chatId = chat.chatid;
@@ -262,7 +263,7 @@ function _getChatId(myId, theirId) {
                  WHERE TblA.memberid=$1 AND TblB.memberid=$2`
 
     // this query only works for "private chat" where exactly one chat includes both users
-    return db.oneOrNone(query, [myId, theirId])
+    return db.oneOrMany(query, [myId, theirId])
         .catch(err => _handleDbError(err));
 }
 
