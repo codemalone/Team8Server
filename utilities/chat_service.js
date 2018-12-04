@@ -327,6 +327,8 @@ function _addRecentMessage(chat, user) {
                 }
                                 
                 chat.recentMessage = displayName + msg.message;
+            } else {
+                chat.recentMessage = "";
             }
         })
         .catch(err => _handleDbError(err));
