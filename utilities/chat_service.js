@@ -112,7 +112,8 @@ function getAllMembers(token, chatid) {
 function leavePrivateChat(myId, theirId) {
     _getChatId(myId, theirId)
     .then(chatId => {
-        _removeFromChat(myId, chatId);
+        if (chatId)
+            _removeFromChat(myId, chatId);
     })
 }
 
@@ -268,7 +269,7 @@ function _getChatId(myId, theirId) {
     let query = `select TblA.chatid FROM chatmembers AS TblA INNER JOIN chatmembers AS TblB ON TblA.chatid=TblB.chatid
                  WHERE TblA.memberid=$1 AND TblB.memberid=$2`
     
-    let query2 = `select count(*) FROM Chatmembers WHERE chatid=$1 group by memberid`
+    let query2 = `select count(*) FROM Chatmembers WHERE chatid=$1 group by chatid`
 
     let result = false;
 
@@ -279,9 +280,9 @@ function _getChatId(myId, theirId) {
 
             rows.forEach(element => {
                 tasks.push(db.one(query2, element['chatid'])
-                    .then(count => {
-                        if (count == 2) {
-                            result = count;
+                    .then(data => {
+                        if (data.count == 2) {
+                            result = element['chatid'];
                         }
                     })
                 );
