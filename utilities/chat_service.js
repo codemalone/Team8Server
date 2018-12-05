@@ -52,8 +52,7 @@ function addConversation(token, theirEmail) {
         }).then(connection => {
             theirMemberId = connection.memberid;
             // check if the two users have an active chat
-            // return _getChatId(myMemberId, theirMemberId)
-            return false;
+            return _getChatId(myMemberId, theirMemberId)
         }).then(chat => {
             if (chat) {
                 result.chatId = chat.chatid;
@@ -108,6 +107,13 @@ function getAllMembers(token, chatid) {
         }).then(() => {
             return result;
         })    
+}
+
+function leavePrivateChat(myId, theirId) {
+    _getChatId(myId, theirId)
+    .then(chatId => {
+        _removeFromChat(myId, chatId);
+    })
 }
 
 function leaveChat(token, chatid) {
@@ -261,10 +267,30 @@ function _removeFromChat(myId, chatId) {
 function _getChatId(myId, theirId) {
     let query = `select TblA.chatid FROM chatmembers AS TblA INNER JOIN chatmembers AS TblB ON TblA.chatid=TblB.chatid
                  WHERE TblA.memberid=$1 AND TblB.memberid=$2`
+    
+    let query2 = `select count(*) FROM Chatmembers WHERE chatid=$1 group by memberid`
+
+    let result = false;
 
     // this query only works for "private chat" where exactly one chat includes both users
     return db.oneOrMany(query, [myId, theirId])
-        .catch(err => _handleDbError(err));
+        .then(rows => {
+            let tasks = new Array();
+
+            rows.forEach(element => {
+                tasks.push(db.one(query2, element['chatid'])
+                    .then(count => {
+                        if (count == 2) {
+                            result = count;
+                        }
+                    })
+                );
+            })
+
+            return Promise.all(tasks);
+        }).then(() => {
+            return result;
+        }).catch(err => _handleDbError(err));
 }
 
 function _createNewChat(myId, theirId) {
@@ -384,5 +410,5 @@ function _handleMissingInputError() {
 // any function included in exports will be public
 module.exports = {
     getAllMessages, sendMessage, addConversation, addUserToConversation,
-    getAllChatDetails, getAllMembers, leaveChat
+    getAllChatDetails, getAllMembers, leaveChat, leavePrivateChat
 }

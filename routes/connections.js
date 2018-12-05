@@ -7,6 +7,8 @@ const bodyParser = require("body-parser");
 // provides resource to verify and manage a member account
 const connections = require('../utilities/connections_service.js');
 
+const leavePrivateChat = require('../utilities/chat_service.js').leavePrivateChat;
+
 // connection to Heroku database
 let db = require('../utilities/utils').db;
 
@@ -97,6 +99,9 @@ router.post('/remove', (req, res) => {
             id = data['memberid']
             db.one('SELECT memberid FROM members WHERE email=$1', otherUser)
                 .then(otherData => {
+                    // call chat_service to leavePrivateChat
+                    leavePrivateChat(id, otherData);
+                    
                     db.none('DELETE FROM contacts WHERE (memberid_a=$1 OR memberid_b=$1) AND (memberid_a=$2 OR memberid_b=$2)', [otherData['memberid'], id])
                     .then(data => {
                         res.send({
