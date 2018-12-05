@@ -104,8 +104,8 @@ function registerUser(first, last, username, email, password) {
         
         return _addUser(first, last, username, email, saltedHash, salt)
             .then(() => {
-                sendValidationEmail(email); // async call
-                return Promise.resolve();
+                sendVerificationEmail(email); // async call
+                //return Promise.resolve();
             })
     } else {
         return _handleMissingInputError();
