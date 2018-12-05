@@ -273,7 +273,7 @@ function _getChatId(myId, theirId) {
     let result = false;
 
     // this query only works for "private chat" where exactly one chat includes both users
-    return db.oneOrMany(query, [myId, theirId])
+    return db.any(query, [myId, theirId])
         .then(rows => {
             let tasks = new Array();
 
